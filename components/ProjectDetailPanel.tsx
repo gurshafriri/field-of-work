@@ -107,7 +107,7 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({ project,
                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                             <span>Audio Recording</span>
                         </div>
-                        <audio controls className="w-full h-8 opacity-80 hover:opacity-100 transition-opacity" controlsList="nodownload">
+                        <audio key={project.audioUrl} controls className="w-full h-8 opacity-80 hover:opacity-100 transition-opacity" controlsList="nodownload">
                             <source src={mediaPath(project.audioUrl)} type="audio/mpeg" />
                             Your browser does not support the audio element.
                         </audio>
