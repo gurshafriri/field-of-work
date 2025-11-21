@@ -184,7 +184,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ projects, onUpdate, onCl
                             {/* Media & Links */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="block text-xs uppercase tracking-widest text-neutral-500">Link URL</label>
+                                    <label className="block text-xs uppercase tracking-widest text-neutral-500">Link URL (External)</label>
                                     <input 
                                         type="text" 
                                         value={selectedProject.link}
@@ -203,7 +203,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ projects, onUpdate, onCl
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block text-xs uppercase tracking-widest text-neutral-500">Audio Filename (Optional)</label>
+                                    <label className="block text-xs uppercase tracking-widest text-neutral-500">Video Embed Link (YouTube/Drive)</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="https://www.youtube.com/embed/..."
+                                        value={selectedProject.videoUrl || ''}
+                                        onChange={(e) => handleFieldChange('videoUrl', e.target.value)}
+                                        className="w-full bg-neutral-800 border border-white/10 rounded p-3 focus:border-blue-500 focus:outline-none transition-colors"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="block text-xs uppercase tracking-widest text-neutral-500">Audio Filename (in /media/)</label>
                                     <input 
                                         type="text" 
                                         placeholder="track.mp3"
@@ -213,12 +223,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ projects, onUpdate, onCl
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block text-xs uppercase tracking-widest text-neutral-500">Video Filename (Optional)</label>
+                                    <label className="block text-xs uppercase tracking-widest text-neutral-500">Score Filename (PDF in /media/)</label>
                                     <input 
                                         type="text" 
-                                        placeholder="video.mp4"
-                                        value={selectedProject.videoUrl || ''}
-                                        onChange={(e) => handleFieldChange('videoUrl', e.target.value)}
+                                        placeholder="score.pdf"
+                                        value={selectedProject.scoreUrl || ''}
+                                        onChange={(e) => handleFieldChange('scoreUrl', e.target.value)}
                                         className="w-full bg-neutral-800 border border-white/10 rounded p-3 focus:border-blue-500 focus:outline-none transition-colors"
                                     />
                                 </div>

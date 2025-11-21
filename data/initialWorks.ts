@@ -25,6 +25,7 @@ export const INITIAL_PROJECTS: Project[] = RAW_NOTION_DATA.results.map((page) =>
         link: page.url,
         tags: tags,
         audioUrl: '',
-        videoUrl: ''
+        videoUrl: '',
+        scoreUrl: ''
     };
 });

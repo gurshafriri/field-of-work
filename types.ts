@@ -7,8 +7,9 @@ export interface Project {
     imageUrl?: string;
     link: string;
     tags: string[];
-    audioUrl?: string;
-    videoUrl?: string;
+    audioUrl?: string; // Filename in /media
+    videoUrl?: string; // Embed URL (YouTube/Vimeo/Drive)
+    scoreUrl?: string; // PDF filename in /media
 }
 
 // Derived state for the visualizer

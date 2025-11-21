@@ -6,6 +6,7 @@ import { ProjectTile } from './components/ProjectTile';
 import { Minimap } from './components/Minimap';
 import { WelcomeOverlay } from './components/WelcomeOverlay';
 import { AdminPanel } from './components/AdminPanel';
+import { ProjectDetailPanel } from './components/ProjectDetailPanel';
 
 // Constants for the virtual world size
 const WORLD_WIDTH = 4000;
@@ -18,6 +19,9 @@ function App() {
   
   // Data State
   const [rawProjects, setRawProjects] = useState<Project[]>(INITIAL_PROJECTS);
+  
+  // Selection State
+  const [selectedProject, setSelectedProject] = useState<ProcessedProject | null>(null);
 
   // Window/Scroll State
   const [scrollPos, setScrollPos] = useState({ x: 0, y: 0 });
@@ -85,7 +89,8 @@ function App() {
 
   // Drag Logic
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!hasStarted || isAdminOpen) return;
+    if (!hasStarted || isAdminOpen || selectedProject) return;
+    // Don't drag if clicking on a tile (handled by tile click, but propagation stopped there anyway)
     setIsDragging(true);
     dragStart.current = { x: e.clientX, y: e.clientY };
     scrollStart.current = { x: window.scrollX, y: window.scrollY };
@@ -152,9 +157,9 @@ function App() {
     requestAnimationFrame(updateState);
   };
 
-  const handleProjectClick = (url: string) => {
+  const handleProjectClick = (project: ProcessedProject) => {
     if (!isDragging) {
-        window.open(url, '_blank', 'noopener,noreferrer');
+        setSelectedProject(project);
     }
   };
 
@@ -228,6 +233,12 @@ function App() {
               onClick={handleProjectClick} 
           />
       ))}
+      
+      {/* Details Sidepanel */}
+      <ProjectDetailPanel 
+          project={selectedProject} 
+          onClose={() => setSelectedProject(null)} 
+      />
 
       {/* HUD */}
       {hasStarted && (
