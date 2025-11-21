@@ -263,7 +263,7 @@ function App() {
             
             {/* Legend & Scanner */}
             <div className="fixed top-6 left-6 pointer-events-none z-40 select-none bg-black/50 p-4 rounded-xl backdrop-blur-sm border border-white/10 min-w-[240px]">
-                <h2 className="text-white-100 font-semibold text-lg tracking-wider"><span className="font-semibold bg-gradient-to-r from-purple-200 to-blue-200 text-transparent bg-clip-text">Creative field</span> by Gur</h2> [WIP]
+                <h2 className="text-white-100 font-semibold text-lg tracking-wider"><span className="font-semibold bg-gradient-to-r from-purple-200 to-blue-200 text-transparent bg-clip-text">Creative field</span> by Gur</h2>
             </div>
           </>
       )}
