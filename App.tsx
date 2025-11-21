@@ -41,34 +41,55 @@ function App() {
   // RAF Ref for scroll optimization
   const rafRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    const loadData = async () => {
-        try {
-            const baseUrl = import.meta.env?.BASE_URL || '/';
-            
-            const path = baseUrl.endsWith('/') ? 'works.json' : '/works.json';
-            const fullUrl = `${baseUrl}${path}`.replace('//', '/');
-            
-            const response = await fetch(fullUrl);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
+useEffect(() => {
+  let isCancelled = false;
+
+  const loadData = async () => {
+    try {
+      // Vite guarantees BASE_URL is a string path prefix
+      const baseUrl = import.meta.env.BASE_URL;
+
+      // "/works.json" in dev or "/gurs-creative-field/works.json" on GitHub Pages
+      const fullUrl = `${baseUrl}works.json`;
+
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!isCancelled) {
+        setRawProjects(data);
+      }
+    } catch (e) {
+      console.error('Could not load projects data:', e);
+
+      // Fallback – relative fetch from current path (e.g. when running in a sandbox)
+      try {
+        const response = await fetch('works.json');
+        if (response.ok) {
+          const data = await response.json();
+          if (!isCancelled) {
             setRawProjects(data);
-        } catch (e) {
-            console.error("Could not load projects data:", e);
-            // Fallback
-            try {
-                const response = await fetch('works.json');
-                if (response.ok) {
-                    const data = await response.json();
-                    setRawProjects(data);
-                }
-            } catch (fallbackError) { console.error(fallbackError); }
-        } finally {
-            setIsLoading(false);
+          }
         }
-    };
-    loadData();
-  }, []);
+      } catch (fallbackError) {
+        console.error(fallbackError);
+      }
+    } finally {
+      if (!isCancelled) {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  loadData();
+
+  // Proper cleanup function (no JSX returned from the effect)
+  return () => {
+    isCancelled = true;
+  };
+}, []);
 
   // Process Projects: Coordinates + Collision Detection
   const processedProjects = useMemo<ProcessedProject[]>(() => {
