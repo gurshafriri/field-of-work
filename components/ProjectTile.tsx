@@ -7,10 +7,9 @@ interface ProjectTileProps {
 }
 
 export const ProjectTile: React.FC<ProjectTileProps> = ({ project, onClick }) => {
-    // specific handling for base url to ensure media loads in subdirectories (e.g. github pages)
     const baseUrl = import.meta.env?.BASE_URL || '/';
+        
     const mediaPath = (filename: string) => {
-        // Remove leading slash from filename if present to avoid double slashes
         const cleanFilename = filename.startsWith('/') ? filename.slice(1) : filename;
         return `${baseUrl}media/${cleanFilename}`.replace('//', '/');
     };
@@ -19,8 +18,7 @@ export const ProjectTile: React.FC<ProjectTileProps> = ({ project, onClick }) =>
         <div 
             className="absolute rounded-2xl border border-white/10 bg-neutral-900 shadow-2xl hover:scale-105 hover:border-blue-400/50 hover:z-50 transition-all duration-300 cursor-pointer group overflow-hidden flex flex-col"
             style={{
-                left: `${project.x}%`,
-                top: `${project.y}%`,
+                // Position is now handled by the parent container to allow pixel-based layout
                 width: '240px',
                 height: '240px',
                 transform: 'translate(-50%, -50%)'
@@ -37,7 +35,6 @@ export const ProjectTile: React.FC<ProjectTileProps> = ({ project, onClick }) =>
                         className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                         style={{ backgroundImage: `url(${mediaPath(project.imageUrl)})` }}
                     />
-                    {/* Gradient Overlay for text readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-900/60 to-transparent opacity-90 group-hover:opacity-80 transition-opacity" />
                 </div>
             ) : (
@@ -62,13 +59,6 @@ export const ProjectTile: React.FC<ProjectTileProps> = ({ project, onClick }) =>
                     <h3 className="text-lg font-medium text-white leading-tight group-hover:text-blue-200 transition-colors drop-shadow-lg">
                         {project.title}
                     </h3>
-                    
-                    {/* Mini indicators for media availability */}
-                    <div className="flex gap-2 mt-2 text-white/40">
-                        {project.videoUrl && <span title="Video">▶️</span>}
-                        {project.audioUrl && <span title="Audio">🔊</span>}
-                        {project.scoreUrl && <span title="Full Score">🎼</span>}
-                    </div>
                 </div>
                 
                 {/* Bars */}

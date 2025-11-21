@@ -11,6 +11,7 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({ project,
 
     // specific handling for base url to ensure media loads in subdirectories
     const baseUrl = import.meta.env?.BASE_URL || '/';
+        
     const mediaPath = (filename: string) => {
         if (!filename) return '';
         const cleanFilename = filename.startsWith('/') ? filename.slice(1) : filename;

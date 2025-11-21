@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { Project, ProcessedProject } from './types';
 import { audioService } from './services/audioService';
 import { ProjectTile } from './components/ProjectTile';
@@ -8,8 +8,9 @@ import { AdminPanel } from './components/AdminPanel';
 import { ProjectDetailPanel } from './components/ProjectDetailPanel';
 
 // Constants for the virtual world size
-const WORLD_WIDTH = 4000;
-const WORLD_HEIGHT = 4000;
+const WORLD_WIDTH = 3000;
+const WORLD_HEIGHT = 3000;
+const TILE_SIZE = 320; // Large gap radius to ensure separation
 
 function App() {
   const [hasStarted, setHasStarted] = useState(false);
@@ -19,6 +20,11 @@ function App() {
   // Data State
   const [rawProjects, setRawProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // View State
+  const [zoom, setZoom] = useState(1);
+  const [currentCoords, setCurrentCoords] = useState({ tech: 50, art: 50 });
   
   // Selection State
   const [selectedProject, setSelectedProject] = useState<ProcessedProject | null>(null);
@@ -38,31 +44,25 @@ function App() {
   useEffect(() => {
     const loadData = async () => {
         try {
-            // Safely access BASE_URL, default to '/' if env is undefined
             const baseUrl = import.meta.env?.BASE_URL || '/';
             
-            // Ensure we have correct path handling for the fetch
             const path = baseUrl.endsWith('/') ? 'works.json' : '/works.json';
             const fullUrl = `${baseUrl}${path}`.replace('//', '/');
             
             const response = await fetch(fullUrl);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             setRawProjects(data);
         } catch (e) {
             console.error("Could not load projects data:", e);
-            // Fallback attempt to fetch from root if the constructed URL failed
+            // Fallback
             try {
                 const response = await fetch('works.json');
                 if (response.ok) {
                     const data = await response.json();
                     setRawProjects(data);
                 }
-            } catch (fallbackError) {
-                console.error("Fallback load failed:", fallbackError);
-            }
+            } catch (fallbackError) { console.error(fallbackError); }
         } finally {
             setIsLoading(false);
         }
@@ -70,25 +70,97 @@ function App() {
     loadData();
   }, []);
 
-  // Process Projects into Visual World Coordinates
+  // Process Projects: Coordinates + Collision Detection
   const processedProjects = useMemo<ProcessedProject[]>(() => {
     if (!rawProjects.length) return [];
-    return rawProjects.map((p) => {
-      // Map scores (0-100) to coordinates
-      // Tech: 0 (Left) -> 100 (Right)
-      const x = 5 + (p.techScore * 0.9); 
-      
-      // Art: 100 (Top/High Art) -> 0 (Bottom/Low Art)
-      // Inverted: Art 100 = 5%, Art 0 = 95%
-      const y = 5 + ((100 - p.artScore) * 0.9);
 
-      return {
-        ...p,
-        x, 
-        y
-      };
+    // 1. Initial Position Mapping (Percentage to Pixels)
+    let nodes = rawProjects.map((p) => {
+      const margin = 400; // Larger margin to keep away from edges
+      const usableWidth = WORLD_WIDTH - (margin * 2);
+      const usableHeight = WORLD_HEIGHT - (margin * 2);
+
+      // Tech: 0 (Left) -> 100 (Right)
+      const x = margin + (p.techScore / 100) * usableWidth;
+      
+      // Art: 100 (Top) -> 0 (Bottom)
+      const y = margin + ((100 - p.artScore) / 100) * usableHeight;
+
+      return { ...p, x, y, vx: 0, vy: 0 };
     });
+
+    // 2. Collision Resolution (Iterative Repel)
+    const iterations = 120; // High iterations for stability
+    
+    for (let i = 0; i < iterations; i++) {
+        for (let a = 0; a < nodes.length; a++) {
+            for (let b = a + 1; b < nodes.length; b++) {
+                const nodeA = nodes[a];
+                const nodeB = nodes[b];
+
+                const dx = nodeA.x - nodeB.x;
+                const dy = nodeA.y - nodeB.y;
+                const distSq = dx * dx + dy * dy;
+                const minDist = TILE_SIZE; 
+
+                if (distSq < minDist * minDist) {
+                    const dist = Math.sqrt(distSq) || 0.1;
+                    const overlap = minDist - dist;
+                    
+                    // Normalize vector
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+
+                    // Stronger separation force
+                    const force = overlap * 0.8; 
+
+                    nodeA.x += nx * force;
+                    nodeA.y += ny * force;
+                    nodeB.x -= nx * force;
+                    nodeB.y -= ny * force;
+                }
+            }
+        }
+        
+        // Boundary Constraints
+        nodes.forEach(node => {
+            node.x = Math.max(200, Math.min(WORLD_WIDTH - 200, node.x));
+            node.y = Math.max(200, Math.min(WORLD_HEIGHT - 200, node.y));
+        });
+    }
+
+    return nodes.map(n => ({
+        ...n,
+        x: n.x,
+        y: n.y
+    }));
   }, [rawProjects]);
+
+  // Filter based on search
+  const visibleProjects = useMemo(() => {
+      if (!searchQuery) return processedProjects;
+      const q = searchQuery.toLowerCase();
+      return processedProjects.filter(p => 
+          p.title.toLowerCase().includes(q) || 
+          p.tags.some(t => t.toLowerCase().includes(q)) ||
+          p.description.toLowerCase().includes(q)
+      );
+  }, [processedProjects, searchQuery]);
+
+  // Auto-scroll to results when search changes
+  useEffect(() => {
+    if (searchQuery && visibleProjects.length > 0) {
+        const target = visibleProjects[0];
+        const scaledX = target.x * zoom;
+        const scaledY = target.y * zoom;
+        
+        window.scrollTo({
+            left: scaledX - (window.innerWidth / 2),
+            top: scaledY - (window.innerHeight / 2),
+            behavior: 'smooth'
+        });
+    }
+  }, [searchQuery, visibleProjects, zoom]);
 
   // --- Event Handlers ---
 
@@ -98,13 +170,25 @@ function App() {
     
     setScrollPos({ x: winScrollX, y: winScrollY });
 
-    // Calculate relative position (0.0 - 1.0) for Audio Engine
-    const maxScrollX = WORLD_WIDTH - window.innerWidth;
-    const maxScrollY = WORLD_HEIGHT - window.innerHeight;
+    // Center point in World Coordinates
+    const centerX = (winScrollX + (windowSize.w / 2)) / zoom;
+    const centerY = (winScrollY + (windowSize.h / 2)) / zoom;
+
+    const xRatio = Math.max(0, Math.min(1, centerX / WORLD_WIDTH));
+    const yRatio = Math.max(0, Math.min(1, centerY / WORLD_HEIGHT));
     
-    const xRatio = maxScrollX > 0 ? winScrollX / maxScrollX : 0;
-    const yRatio = maxScrollY > 0 ? winScrollY / maxScrollY : 0;
+    // Update HUD State
+    const margin = 400;
+    const usable = WORLD_WIDTH - margin * 2;
     
+    const techVal = Math.round(((centerX - margin) / usable) * 100);
+    const artVal = Math.round(100 - ((centerY - margin) / usable) * 100);
+    
+    setCurrentCoords({
+        tech: Math.max(0, Math.min(100, techVal)),
+        art: Math.max(0, Math.min(100, artVal))
+    });
+
     if (hasStarted) {
         audioService.updateParams(xRatio, yRatio);
     }
@@ -126,7 +210,8 @@ function App() {
   // Drag Logic
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!hasStarted || isAdminOpen || selectedProject) return;
-    // Don't drag if clicking on a tile (handled by tile click, but propagation stopped there anyway)
+    if ((e.target as HTMLElement).closest('.project-tile')) return;
+
     setIsDragging(true);
     dragStart.current = { x: e.clientX, y: e.clientY };
     scrollStart.current = { x: window.scrollX, y: window.scrollY };
@@ -162,13 +247,26 @@ function App() {
       setRawProjects(updatedProjects);
   };
 
+  const handleMinimapNavigate = useCallback((x: number, y: number) => {
+      // x, y are target center coordinates in World Pixels
+      const scaledX = x * zoom;
+      const scaledY = y * zoom;
+
+      const targetScrollX = scaledX - (window.innerWidth / 2);
+      const targetScrollY = scaledY - (window.innerHeight / 2);
+
+      window.scrollTo({
+          left: targetScrollX,
+          top: targetScrollY,
+          behavior: 'auto'
+      });
+  }, [zoom]);
+
   // --- Effects ---
 
   useEffect(() => {
-    // Check hash on load
     const handleHashChange = () => setIsAdminOpen(window.location.hash === '#admin');
     window.addEventListener('hashchange', handleHashChange);
-
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', handleResize);
     return () => {
@@ -177,37 +275,41 @@ function App() {
       window.removeEventListener('resize', handleResize);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [hasStarted]);
+  }, [hasStarted, zoom]); 
 
   const startExperience = async () => {
     await audioService.start();
     setHasStarted(true);
     
-    // Center initial view
-    window.scrollTo(
-        (WORLD_WIDTH - window.innerWidth) / 2, 
-        (WORLD_HEIGHT - window.innerHeight) / 2
-    );
+    // Center initial view (scaled)
+    const startX = (WORLD_WIDTH * zoom - window.innerWidth) / 2;
+    const startY = (WORLD_HEIGHT * zoom - window.innerHeight) / 2;
+
+    window.scrollTo(startX, startY);
     
-    // Force an initial update
     requestAnimationFrame(updateState);
   };
 
-  const handleProjectClick = (project: ProcessedProject) => {
-    if (!isDragging) {
-        setSelectedProject(project);
-    }
-  };
+  const handleZoom = (delta: number) => {
+      const newZoom = Math.min(1.5, Math.max(0.4, zoom + delta));
+      
+      const centerX = window.scrollX + (window.innerWidth / 2);
+      const centerY = window.scrollY + (window.innerHeight / 2);
+      
+      const worldX = centerX / zoom;
+      const worldY = centerY / zoom;
+      
+      setZoom(newZoom);
 
-  // Calculate HUD Values
-  const maxScrollX = Math.max(1, WORLD_WIDTH - windowSize.w);
-  const maxScrollY = Math.max(1, WORLD_HEIGHT - windowSize.h);
-  
-  // Tech is simply 0 -> 100 Left to Right
-  const currentTech = Math.round((scrollPos.x / maxScrollX) * 100);
-  
-  // Art is 100 -> 0 Top to Bottom
-  const currentArt = Math.round(100 - ((scrollPos.y / maxScrollY) * 100));
+      requestAnimationFrame(() => {
+          const newCenterX = worldX * newZoom;
+          const newCenterY = worldY * newZoom;
+          window.scrollTo(
+              newCenterX - (window.innerWidth / 2),
+              newCenterY - (window.innerHeight / 2)
+          );
+      });
+  };
 
   if (isLoading) {
       return <div className="w-full h-screen bg-[#0a0a0a] flex items-center justify-center text-white/50 font-mono">Loading assets...</div>;
@@ -228,51 +330,64 @@ function App() {
 
   return (
     <div 
-      className="relative bg-[#0a0a0a]"
+      className="relative bg-[#0a0a0a] overflow-hidden"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       style={{ 
-          width: `${WORLD_WIDTH}px`, 
-          height: `${WORLD_HEIGHT}px`,
+          width: `${WORLD_WIDTH * zoom}px`, 
+          height: `${WORLD_HEIGHT * zoom}px`,
           cursor: isDragging ? 'grabbing' : 'grab',
-          overscrollBehavior: 'none'
       }}
     >
       
       {!hasStarted && <WelcomeOverlay onStart={startExperience} />}
 
-      {/* Background Grid */}
-      <div className="absolute inset-0 pointer-events-none opacity-20"
-            style={{
-            backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)',
-            backgroundSize: '100px 100px'
-            }}
-      />
-      
-      {/* Axis Labels */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none select-none uppercase">
-          High Artistry
-      </div>
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none select-none uppercase">
-          Low Artistry
-      </div>
-      <div className="absolute left-10 top-1/2 -translate-y-1/2 -rotate-90 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none origin-center whitespace-nowrap select-none uppercase">
-          Low Tech
-      </div>
-      <div className="absolute right-10 top-1/2 -translate-y-1/2 rotate-90 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none origin-center whitespace-nowrap select-none uppercase">
-          High Tech
-      </div>
+      {/* World Container - Scaled */}
+      <div 
+        style={{
+            width: `${WORLD_WIDTH}px`,
+            height: `${WORLD_HEIGHT}px`,
+            transform: `scale(${zoom})`,
+            transformOrigin: '0 0',
+        }}
+        className="relative"
+      >
+        {/* Background Grid */}
+        <div className="absolute inset-0 pointer-events-none opacity-20"
+                style={{
+                backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)',
+                backgroundSize: '100px 100px'
+                }}
+        />
+        
+        {/* Axis Labels (In World) */}
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none select-none uppercase whitespace-nowrap">
+            More Art
+        </div>
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none select-none uppercase whitespace-nowrap">
+            Less Art
+        </div>
+        <div className="absolute left-[-300] top-1/2 -translate-y-1/2 -rotate-90 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none origin-center whitespace-nowrap select-none uppercase">
+            Less Tech
+        </div>
+        <div className="absolute right-[-300] top-1/2 -translate-y-1/2 rotate-90 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none origin-center whitespace-nowrap select-none uppercase">
+            More Tech
+        </div>
 
-      {/* Project Nodes */}
-      {processedProjects.map((project) => (
-          <ProjectTile 
-              key={project.id} 
-              project={project} 
-              onClick={handleProjectClick} 
-          />
-      ))}
+        {/* Project Nodes */}
+        {visibleProjects.map((project) => (
+            <div key={project.id} style={{ position: 'absolute', left: project.x, top: project.y }} className="project-tile">
+                <ProjectTile 
+                    project={project} 
+                    onClick={(p) => {
+                        if (!isDragging) setSelectedProject(p);
+                    }} 
+                />
+            </div>
+        ))}
+      </div>
       
       {/* Details Sidepanel */}
       <ProjectDetailPanel 
@@ -290,62 +405,122 @@ function App() {
                 worldHeight={WORLD_HEIGHT}
                 windowWidth={windowSize.w}
                 windowHeight={windowSize.h}
-                projects={processedProjects}
+                zoom={zoom}
+                projects={visibleProjects}
+                onNavigate={handleMinimapNavigate}
             />
             
-            {/* Mute Button */}
-            <div className="fixed bottom-6 right-56 sm:right-72 z-50">
+            {/* Left Top: Merged Info & Search */}
+            <div className="fixed top-6 left-6 z-50 flex flex-col">
+                <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden shadow-2xl w-[280px]">
+                    <div className="p-4 border-b border-white/10">
+                        <h2 className="text-white font-semibold text-lg tracking-wider leading-none">
+                            <span className="bg-gradient-to-r from-purple-300 to-blue-300 text-transparent bg-clip-text">Creative field</span>
+                        </h2>
+                        <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">by Gur Shafriri</p>
+                    </div>
+                    
+                    <div className="p-2 bg-white/5">
+                        <div className="flex items-center bg-black/50 rounded-lg border border-white/5">
+                             <div className="pl-2 text-neutral-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                                </svg>
+                            </div>
+                            <input 
+                                type="text" 
+                                placeholder="Search works..." 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="bg-transparent border-none text-white text-xs p-2 pl-2 w-full focus:outline-none placeholder:text-neutral-600 font-mono"
+                            />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} className="pr-2 text-neutral-500 hover:text-white">
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Left Indicators */}
+            <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-4">
+                {/* Coordinate Scanner */}
+                <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-lg space-y-2 w-[140px]">
+                     <div className="flex justify-between items-center text-xs font-mono">
+                        <span className="text-blue-400 uppercase">Tech</span>
+                        <span className="text-white">{currentCoords.tech}</span>
+                     </div>
+                     <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${currentCoords.tech}%` }} />
+                     </div>
+                     
+                     <div className="flex justify-between items-center text-xs font-mono pt-1">
+                        <span className="text-purple-400 uppercase">Art</span>
+                        <span className="text-white">{currentCoords.art}</span>
+                     </div>
+                     <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-purple-500 transition-all duration-300" style={{ width: `${currentCoords.art}%` }} />
+                     </div>
+                </div>
+
+                {/* Zoom Controls */}
+                <div className="flex items-center gap-2 bg-black/80 backdrop-blur-md border border-white/10 rounded-lg p-1 shadow-lg self-start">
+                     <button 
+                        onClick={() => handleZoom(-0.1)}
+                        className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
+                     >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+                        </svg>
+                     </button>
+                     <span className="text-xs font-mono w-8 text-center text-neutral-500">{Math.round(zoom * 100)}%</span>
+                     <button 
+                        onClick={() => handleZoom(0.1)}
+                        className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
+                     >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                     </button>
+                </div>
+
+                {/* Audio Toggle */}
                  <button 
                     onClick={toggleMute}
-                    className="w-12 h-12 flex items-center justify-center bg-neutral-900/90 border border-white/20 rounded-full text-white/70 hover:text-white hover:bg-neutral-800 transition-all"
-                    title={isMuted ? "Unmute Sound" : "Mute Sound"}
+                    className="flex items-center gap-2 bg-black/80 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-lg hover:bg-white/10 transition-colors self-start w-[140px]"
                  >
-                    {isMuted ? (
-                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                           <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
-                         </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
-                        </svg>
-                    )}
+                     {isMuted ? (
+                         <>
+                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-red-400">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                            </svg>
+                             <span className="text-xs font-mono text-neutral-400">Unmute</span>
+                         </>
+                     ) : (
+                         <>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-green-400">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                            </svg>
+                            <span className="text-xs font-mono text-neutral-400">Sound On</span>
+                         </>
+                     )}
                  </button>
             </div>
-            
-            {/* Legend & Scanner */}
-            <div className="fixed top-6 left-6 pointer-events-none z-40 select-none bg-black/50 p-4 rounded-xl backdrop-blur-sm border border-white/10 min-w-[240px]">
-                <h2 className="text-white-100 font-semibold text-lg tracking-wider"><span className="font-semibold bg-gradient-to-r from-purple-200 to-blue-200 text-transparent bg-clip-text">Creative field</span> by Gur</h2>
+
+             {/* Admin Toggle */}
+            <div className="fixed bottom-6 left-0 w-4 h-4 z-[100]">
+                 <button 
+                    onClick={() => {
+                         window.location.hash = 'admin';
+                    }}
+                    className="w-full h-full opacity-0 hover:opacity-50 bg-red-500 cursor-default"
+                    title="Admin"
+                />
             </div>
           </>
       )}
-        <div className="fixed bottom-6 left-6 z-40 bg-black/50 p-4 rounded-xl backdrop-blur-sm border border-white/10 min-w-[240px] font-mono text-sm group">
-             <div className="flex justify-between text-blue-400 mb-1 select-none pointer-events-none">
-                <span>Technology</span>
-                <span className="font-bold">{currentTech.toString().padStart(3, '0')}</span>
-            </div>
-            <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden pointer-events-none">
-                <div className="h-full bg-blue-500 transition-all duration-200 ease-linear" style={{ width: `${currentTech}%` }}></div>
-            </div>
-
-            <div className="flex justify-between text-purple-400 mt-3 mb-1 select-none pointer-events-none">
-                <span>Music and Art</span>
-                <span className="font-bold">{currentArt.toString().padStart(3, '0')}</span>
-            </div>
-            <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden pointer-events-none">
-                <div className="h-full bg-purple-500 transition-all duration-200 ease-linear" style={{ width: `${currentArt}%` }}></div>
-            </div>
-            <div className="mt-4 text-[10px] text-neutral-500 uppercase tracking-widest select-none pointer-events-none">
-                Drag or Scroll to Navigate
-            </div>
-            
-            {/* Hidden Admin Toggle (Visible on Hover) */}
-            <button 
-                onClick={() => setIsAdminOpen(true)}
-                className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity text-[10px] text-neutral-400 border border-white/20 px-1 rounded"
-            >
-                EDIT
-            </button>
-        </div>
     </div>
   );
 }
