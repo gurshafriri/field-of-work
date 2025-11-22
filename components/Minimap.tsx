@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { ProcessedProject } from '../types';
+import { AudioVisualizer } from './AudioVisualizer';
 
 interface MinimapProps {
     scrollX: number;
@@ -11,6 +12,11 @@ interface MinimapProps {
     zoom: number;
     projects: ProcessedProject[];
     onNavigate: (x: number, y: number) => void;
+    // Integrated HUD props
+    techScore: number;
+    artScore: number;
+    isMuted: boolean;
+    onToggleMute: (e: React.MouseEvent) => void;
 }
 
 export const Minimap: React.FC<MinimapProps> = ({ 
@@ -22,15 +28,18 @@ export const Minimap: React.FC<MinimapProps> = ({
     windowHeight,
     zoom,
     projects,
-    onNavigate
+    onNavigate,
+    techScore,
+    artScore,
+    isMuted,
+    onToggleMute
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDragging, setIsDragging] = useState(false);
     
-    // Store offset from viewport center to mouse position to prevent jumping on drag start
+    // Store offset from viewport center to mouse position
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-    // Keep latest props in refs to access them in event listeners without re-binding
     const propsRef = useRef({ worldWidth, worldHeight, windowWidth, windowHeight, zoom, onNavigate, scrollX, scrollY });
     useEffect(() => {
         propsRef.current = { worldWidth, worldHeight, windowWidth, windowHeight, zoom, onNavigate, scrollX, scrollY };
@@ -44,12 +53,8 @@ export const Minimap: React.FC<MinimapProps> = ({
         if (!ctx) return;
 
         const render = () => {
-            // Clear
+            // Clear (Transparent background to let Visualizer show through)
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Background
-            ctx.fillStyle = '#171717'; // neutral-900
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // 1. Draw Projects
             projects.forEach(project => {
@@ -57,34 +62,14 @@ export const Minimap: React.FC<MinimapProps> = ({
                 const py = (project.y / worldHeight) * canvas.height;
 
                 const isTech = project.techScore > project.artScore;
-                ctx.fillStyle = isTech ? 'rgba(59, 130, 246, 0.8)' : 'rgba(168, 85, 247, 0.8)';
+                ctx.fillStyle = isTech ? 'rgba(96, 165, 250, 0.8)' : 'rgba(192, 132, 252, 0.8)'; 
                 
                 ctx.beginPath();
-                ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+                ctx.arc(px, py, 1.5, 0, Math.PI * 2);
                 ctx.fill();
             });
 
-            // 2. Draw Labels
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.font = '9px monospace';
-            ctx.textAlign = 'center';
-            
-            ctx.fillText('MORE ART', canvas.width / 2, 12);
-            ctx.fillText('LESS ART', canvas.width / 2, canvas.height - 5);
-
-            ctx.save();
-            ctx.translate(10, canvas.height / 2);
-            ctx.rotate(-Math.PI / 2);
-            ctx.fillText('LESS TECH', 0, 0);
-            ctx.restore();
-
-            ctx.save();
-            ctx.translate(canvas.width - 5, canvas.height / 2);
-            ctx.rotate(Math.PI / 2);
-            ctx.fillText('MORE TECH', 0, 0);
-            ctx.restore();
-
-            // 3. Draw Viewport Rectangle
+            // 2. Draw Viewport Rectangle
             const { zoom, windowWidth, windowHeight, scrollX, scrollY } = propsRef.current;
             
             // Calculate viewport in World Coordinates
@@ -99,10 +84,12 @@ export const Minimap: React.FC<MinimapProps> = ({
             const mapW = (viewW / worldWidth) * canvas.width;
             const mapH = (viewH / worldHeight) * canvas.height;
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 1;
             ctx.strokeRect(mapX, mapY, mapW, mapH);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            
+            // Semi-transparent fill for viewport
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
             ctx.fillRect(mapX, mapY, mapW, mapH);
         };
 
@@ -122,7 +109,6 @@ export const Minimap: React.FC<MinimapProps> = ({
 
         const { zoom, windowWidth, windowHeight, scrollX, scrollY, worldWidth, worldHeight } = propsRef.current;
 
-        // Current Viewport on Canvas
         const viewW = (windowWidth / zoom);
         const viewH = (windowHeight / zoom);
         const mapX = ((scrollX / zoom) / worldWidth) * canvas.width;
@@ -130,12 +116,9 @@ export const Minimap: React.FC<MinimapProps> = ({
         const mapW = (viewW / worldWidth) * canvas.width;
         const mapH = (viewH / worldHeight) * canvas.height;
 
-        // Check if click is inside current viewport rect
         const isInside = mx >= mapX && mx <= mapX + mapW && my >= mapY && my <= mapY + mapH;
 
         if (isInside) {
-            // Calculate offset from center of rect to mouse
-            // This ensures we drag from where we grabbed, rather than snapping center to mouse
             const centerX = mapX + mapW / 2;
             const centerY = mapY + mapH / 2;
             setDragOffset({
@@ -143,9 +126,7 @@ export const Minimap: React.FC<MinimapProps> = ({
                 y: my - centerY
             });
         } else {
-            // Clicked outside: Snap center to mouse immediately
             setDragOffset({ x: 0, y: 0 });
-            // Immediate jump
             const worldX = (mx / canvas.width) * worldWidth;
             const worldY = (my / canvas.height) * worldHeight;
             propsRef.current.onNavigate(worldX, worldY);
@@ -158,7 +139,7 @@ export const Minimap: React.FC<MinimapProps> = ({
     useEffect(() => {
         const handleGlobalMove = (e: MouseEvent | TouchEvent) => {
             if (!isDragging || !canvasRef.current) return;
-            e.preventDefault(); // Stop scrolling/selection
+            e.preventDefault();
 
             let clientX, clientY;
             if ('touches' in e) {
@@ -176,12 +157,9 @@ export const Minimap: React.FC<MinimapProps> = ({
             
             const { worldWidth, worldHeight } = propsRef.current;
 
-            // Target Canvas Position (where we want the center to be)
-            // MousePos - DragOffset
             const targetCx = mx - dragOffset.x;
             const targetCy = my - dragOffset.y;
 
-            // Convert back to World Coordinates
             const worldX = (targetCx / canvas.width) * worldWidth;
             const worldY = (targetCy / canvas.height) * worldHeight;
 
@@ -208,21 +186,83 @@ export const Minimap: React.FC<MinimapProps> = ({
     }, [isDragging, dragOffset]);
 
     return (
-        <div className="fixed bottom-6 right-6 w-48 h-48 sm:w-64 sm:h-64 bg-neutral-900/90 border border-white/20 rounded-lg overflow-hidden shadow-2xl backdrop-blur-sm z-50 cursor-crosshair touch-none">
-            <canvas 
-                ref={canvasRef} 
-                width={256} 
-                height={256} 
-                className="w-full h-full"
-                onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleMouseDown(e.clientX, e.clientY);
-                }}
-                onTouchStart={(e) => {
-                    e.preventDefault(); 
-                    handleMouseDown(e.touches[0].clientX, e.touches[0].clientY);
-                }}
-            />
+        <div className="fixed bottom-6 right-6 z-50 select-none">
+            {/* Container */}
+            <div className="relative w-48 h-48 sm:w-64 sm:h-64 bg-neutral-950/80 border border-white/10 shadow-2xl rounded">
+                
+                {/* Layer 0: Audio Visualizer (Centered, constrained height) */}
+                <div className="absolute top-1/2 left-0 w-full h-16 -translate-y-1/2 opacity-40 pointer-events-none">
+                     <AudioVisualizer 
+                        isActive={!isMuted} 
+                        techScore={techScore} 
+                        artScore={artScore} 
+                    />
+                </div>
+
+                {/* Layer 1: Canvas Map */}
+                <canvas 
+                    ref={canvasRef} 
+                    width={256} 
+                    height={256} 
+                    className="absolute inset-0 w-full h-full cursor-crosshair touch-none z-10"
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleMouseDown(e.clientX, e.clientY);
+                    }}
+                    onTouchStart={(e) => {
+                        e.preventDefault(); 
+                        handleMouseDown(e.touches[0].clientX, e.touches[0].clientY);
+                    }}
+                />
+
+                {/* Layer 2: Coordinate Scanners (Thin Bars) */}
+                
+                {/* Tech: Bottom Bar */}
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-neutral-800 overflow-hidden z-20">
+                    <div 
+                        className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,1)]"
+                        style={{ width: `${techScore}%` }}
+                    />
+                </div>
+                {/* Tech Label (Floating above bar) */}
+                <div className="absolute bottom-1.5 left-1 z-20 flex items-center gap-1 pointer-events-none">
+                    <span className="text-[10px] font-bold text-neutral-500 tracking-widest">tech</span>
+                    <span className="text-[10px] font-mono text-blue-300 min-w-[20px]">{Math.round(techScore)}</span>
+                </div>
+
+                {/* Art: Right Bar */}
+                <div className="absolute top-0 right-0 h-full w-1 bg-neutral-800 overflow-hidden z-20">
+                     <div 
+                        className="w-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,1)] absolute bottom-0"
+                        style={{ height: `${artScore}%` }}
+                    />
+                </div>
+                {/* Art Label (Floating left of bar) */}
+                <div className="absolute top-1 right-2 z-20 flex items-center gap-1 pointer-events-none">
+                    <span className="text-[10px] font-mono text-purple-300 min-w-[20px] text-right">{Math.round(artScore)}</span>
+                    <span className="text-[10px] font-bold text-neutral-500 tracking-widest">art</span>
+                </div>
+
+                {/* Audio Toggle (Bottom Right, inside container to keep unit cohesive, but accessible) */}
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleMute(e);
+                    }}
+                    className="absolute bottom-2 right-3 z-30 p-2 group opacity-50 hover:opacity-100 transition-opacity"
+                    title={isMuted ? "Unmute" : "Mute"}
+                >
+                    {isMuted ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-neutral-400 group-hover:text-white">
+                           <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                        </svg>
+                    ) : (
+                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-green-400 group-hover:text-green-300 shadow-[0_0_10px_rgba(74,222,128,0.5)]">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                       </svg>
+                    )}
+                </button>
+            </div>
         </div>
     );
 };

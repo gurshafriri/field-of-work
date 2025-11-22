@@ -6,7 +6,6 @@ import { Minimap } from './components/Minimap';
 import { WelcomeOverlay } from './components/WelcomeOverlay';
 import { AdminPanel } from './components/AdminPanel';
 import { ProjectDetailPanel } from './components/ProjectDetailPanel';
-import { AudioVisualizer } from './components/AudioVisualizer';
 
 // Constants for the virtual world size
 const WORLD_WIDTH = 3000;
@@ -383,70 +382,71 @@ function App() {
   }
 
   return (
-    <div 
-      ref={scrollContainerRef}
-      className={`w-full h-full bg-[#0a0a0a] relative overflow-auto ${hasStarted ? '' : 'overflow-hidden'}`}
-    >
+    <div className="w-full h-full bg-[#0a0a0a] relative overflow-hidden">
       
       {!hasStarted && <WelcomeOverlay onStart={startExperience} />}
 
       {/* World Container - Scaled */}
-      {/* Wrapper to catch drag events */}
-      <div
-        className="relative origin-top-left"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        style={{ 
-            width: `${WORLD_WIDTH * zoom}px`, 
-            height: `${WORLD_HEIGHT * zoom}px`,
-            cursor: isDragging ? 'grabbing' : 'grab',
-        }}
+      <div 
+        ref={scrollContainerRef}
+        className={`w-full h-full overflow-auto ${hasStarted ? '' : 'overflow-hidden'}`}
       >
-          <div 
-            style={{
-                width: `${WORLD_WIDTH}px`,
-                height: `${WORLD_HEIGHT}px`,
-                transform: `scale(${zoom})`,
-                transformOrigin: '0 0',
+        <div
+            className="relative origin-top-left"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            style={{ 
+                width: `${WORLD_WIDTH * zoom}px`, 
+                height: `${WORLD_HEIGHT * zoom}px`,
+                cursor: isDragging ? 'grabbing' : 'grab',
             }}
-            className="relative"
-          >
-            {/* Background Grid */}
-            <div className="absolute inset-0 pointer-events-none opacity-20"
-                    style={{
-                    backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)',
-                    backgroundSize: '100px 100px'
-                    }}
-            />
-            
-            {/* Axis Labels (In World) */}
-            <div className="absolute top-10 left-1/2 -translate-x-1/2 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none select-none uppercase whitespace-nowrap">
-                More Art
-            </div>
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none select-none uppercase whitespace-nowrap">
-                Less Art
-            </div>
-            <div className="absolute left-[-300px] top-1/2 -translate-y-1/2 -rotate-90 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none origin-center whitespace-nowrap select-none uppercase">
-                Less Tech
-            </div>
-            <div className="absolute right-[-300px] top-1/2 -translate-y-1/2 rotate-90 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none origin-center whitespace-nowrap select-none uppercase">
-                More Tech
-            </div>
-
-            {/* Project Nodes */}
-            {visibleProjects.map((project) => (
-                <div key={project.id} style={{ position: 'absolute', left: project.x, top: project.y }} className="project-tile">
-                    <ProjectTile 
-                        project={project} 
-                        onClick={(p) => {
-                            if (!isDragging) setSelectedProject(p);
-                        }} 
-                    />
+        >
+            <div 
+                style={{
+                    width: `${WORLD_WIDTH}px`,
+                    height: `${WORLD_HEIGHT}px`,
+                    transform: `scale(${zoom})`,
+                    transformOrigin: '0 0',
+                }}
+                className="relative"
+            >
+                {/* Background Grid */}
+                <div className="absolute inset-0 pointer-events-none opacity-20"
+                        style={{
+                        backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)',
+                        backgroundSize: '100px 100px'
+                        }}
+                />
+                
+                {/* Axis Labels (In World) */}
+                <div className="absolute top-10 left-1/2 -translate-x-1/2 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none select-none uppercase whitespace-nowrap">
+                    More Art
                 </div>
-            ))}
-          </div>
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none select-none uppercase whitespace-nowrap">
+                    Less Art
+                </div>
+                <div className="absolute left-[-300px] top-1/2 -translate-y-1/2 -rotate-90 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none origin-center whitespace-nowrap select-none uppercase">
+                    Less Tech
+                </div>
+                <div className="absolute right-[-300px] top-1/2 -translate-y-1/2 rotate-90 text-neutral-800 font-black tracking-[1em] text-6xl pointer-events-none origin-center whitespace-nowrap select-none uppercase">
+                    More Tech
+                </div>
+
+                {/* Project Nodes */}
+                {visibleProjects.map((project) => (
+                    <div key={project.id} style={{ position: 'absolute', left: project.x, top: project.y }} className="project-tile">
+                        <ProjectTile 
+                            project={project} 
+                            onClick={(p) => {
+                                if (!isDragging) setSelectedProject(p);
+                            }} 
+                        />
+                    </div>
+                ))}
+            </div>
+        </div>
       </div>
       
       {/* Details Sidepanel */}
@@ -456,7 +456,7 @@ function App() {
           onMuteRequest={handleMuteRequest}
       />
 
-      {/* HUD - Placed outside the scaled world but inside the app container */}
+      {/* HUD - Placed OUTSIDE the scroll container to ensure fixed positioning works reliably */}
       {hasStarted && (
           <>
             <Minimap 
@@ -469,6 +469,10 @@ function App() {
                 zoom={zoom}
                 projects={visibleProjects}
                 onNavigate={handleMinimapNavigate}
+                techScore={currentCoords.tech}
+                artScore={currentCoords.art}
+                isMuted={isMuted}
+                onToggleMute={toggleMute}
             />
             
             {/* Left Top: Merged Info & Search */}
@@ -524,62 +528,6 @@ function App() {
                         </svg>
                      </button>
                 </div>
-            </div>
-
-            {/* Bottom Left Indicators */}
-            <div className="fixed bottom-6 left-4 md:left-6 z-50 flex flex-col gap-4 pointer-events-none">
-                {/* Coordinate Scanner */}
-                <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-lg space-y-2 w-[140px] pointer-events-auto">
-                     <div className="flex justify-between items-center text-xs font-mono">
-                        <span className="text-blue-400 uppercase">Tech</span>
-                        <span className="text-white">{currentCoords.tech}</span>
-                     </div>
-                     <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${currentCoords.tech}%` }} />
-                     </div>
-                     
-                     <div className="flex justify-between items-center text-xs font-mono pt-1">
-                        <span className="text-purple-400 uppercase">Art</span>
-                        <span className="text-white">{currentCoords.art}</span>
-                     </div>
-                     <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-500 transition-all duration-300" style={{ width: `${currentCoords.art}%` }} />
-                     </div>
-                </div>
-
-                {/* Audio Panel with Visualizer */}
-                 <button 
-                    onClick={toggleMute}
-                    className="group relative bg-black/80 backdrop-blur-md border border-white/10 rounded-lg shadow-lg hover:border-white/30 transition-all overflow-hidden w-[140px] h-[60px] flex flex-col justify-end pointer-events-auto"
-                 >
-                    {/* Visualizer Background */}
-                    <div className="absolute inset-0 z-0 opacity-60 group-hover:opacity-80 transition-opacity">
-                         <AudioVisualizer 
-                            isActive={!isMuted} 
-                            techScore={currentCoords.tech} 
-                            artScore={currentCoords.art} 
-                        />
-                    </div>
-
-                    {/* Label Overlay */}
-                    <div className="relative z-10 p-2 w-full flex items-center justify-between bg-gradient-to-t from-black/90 to-transparent">
-                         {isMuted ? (
-                             <>
-                                <span className="text-[10px] font-mono text-neutral-400">Sound Off</span>
-                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 text-red-400">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
-                                </svg>
-                             </>
-                         ) : (
-                             <>
-                                <span className="text-[10px] font-mono text-neutral-300 group-hover:text-white">Sound On</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 text-green-400">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
-                                </svg>
-                             </>
-                         )}
-                    </div>
-                 </button>
             </div>
 
              {/* Admin Toggle */}
