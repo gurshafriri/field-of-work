@@ -578,7 +578,7 @@ function App() {
                     <div className="p-4 border-b border-white/10 flex justify-between items-center gap-2">
                         <div>
                             <h2 className="text-white font-semibold text-lg tracking-wider leading-none">
-                                <span className="bg-gradient-to-r from-purple-300 to-blue-300 text-transparent bg-clip-text">Creative field</span>
+                                <span className="bg-gradient-to-r from-purple-300 to-blue-300 text-transparent bg-clip-text">Field of work</span>
                             </h2>
                             <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">by Gur Shafriri</p>
                         </div>
