@@ -16,7 +16,7 @@ export const ProjectTile: React.FC<ProjectTileProps> = ({ project, onClick }) =>
 
     return (
         <div 
-            className="absolute rounded-2xl border border-white/10 bg-neutral-900 shadow-2xl hover:scale-105 hover:border-blue-400/50 hover:z-50 transition-all duration-300 cursor-pointer group overflow-hidden flex flex-col"
+            className="absolute rounded-sm border border-white/10 bg-neutral-900 shadow-2xl hover:scale-105 hover:border-blue-400/50 hover:z-50 transition-all duration-300 cursor-pointer group overflow-hidden flex flex-col"
             style={{
                 // Position is now handled by the parent container to allow pixel-based layout
                 width: '240px',

@@ -574,7 +574,7 @@ function App() {
             
             {/* Left Top: Merged Info, Search & Now Playing */}
             <div className="fixed top-4 left-4 right-4 md:top-6 md:left-6 md:right-auto z-50 flex flex-col gap-3 pointer-events-none">
-                <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden shadow-2xl w-full md:w-[280px] pointer-events-auto">
+                <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-sm overflow-hidden shadow-2xl w-full md:w-[280px] pointer-events-auto">
                     <div className="p-4 border-b border-white/10 flex justify-between items-center gap-2">
                         <div>
                             <h2 className="text-white font-semibold text-lg tracking-wider leading-none">
@@ -619,7 +619,7 @@ function App() {
                     
                     <div className="p-2 bg-white/5 space-y-2">
                         {/* Search Bar */}
-                        <div className="flex items-center bg-black/50 rounded-lg border border-white/5">
+                        <div className="flex items-center bg-black/50 rounded-sm border border-white/5">
                              <div className="pl-2 text-neutral-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -642,7 +642,7 @@ function App() {
                 </div>
 
                 {/* Zoom Controls */}
-                <div className="flex items-center gap-2 bg-black/80 backdrop-blur-md border border-white/10 rounded-lg p-1 shadow-lg self-start pointer-events-auto">
+                <div className="flex items-center gap-2 bg-black/80 backdrop-blur-md border border-white/10 rounded-sm p-1 shadow-lg self-start pointer-events-auto">
                      <button 
                         onClick={() => handleZoom(-0.1)}
                         className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"

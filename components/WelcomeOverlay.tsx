@@ -7,7 +7,7 @@ interface WelcomeOverlayProps {
 export const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({ onStart }) => {
     return (
         <div className="fixed top-0 left-0 w-screen h-[100dvh] z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm touch-none">
-            <div className="max-w-md text-center space-y-8 p-8 border border-white/10 rounded-2xl bg-neutral-900/50">
+            <div className="max-w-md text-center space-y-8 p-8 border border-white/10 rounded-sm bg-neutral-900/50">
                 <h1 className="text-4xl font-light tracking-tighter text-white-400">
                     The creative <span className="font-semibold bg-gradient-to-r from-purple-200 to-blue-200 text-transparent bg-clip-text">field</span>
                 </h1>
