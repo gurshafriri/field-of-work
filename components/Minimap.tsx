@@ -250,7 +250,7 @@ export const Minimap: React.FC<MinimapProps> = ({
                 {/* Art Label (Floating left of bar) */}
                 <div className="absolute top-1 right-2 z-20 flex items-center gap-1 pointer-events-none">
                     <span className="text-[10px] font-mono text-purple-300 min-w-[20px] text-right">{Math.round(artScore)}</span>
-                    <span className="text-[10px] font-bold text-neutral-500 tracking-widest">ART</span>
+                    <span className="text-[10px] font-bold text-neutral-500 tracking-widest">MUSIC</span>
                 </div>
 
                 {/* Audio Toggle (Bottom Right, inside container to keep unit cohesive, but accessible) */}

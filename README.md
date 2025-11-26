@@ -90,7 +90,3 @@ The project is configured for **GitHub Pages**.
 1.  Ensure `vite.config.ts` has the correct `base` url (e.g., `/repo-name/`).
 2.  Push changes to the `main` branch.
 3.  The GitHub Action (`.github/workflows/deploy.yml`) will automatically build and deploy the site.
-
-## License
-
-[MIT](LICENSE)

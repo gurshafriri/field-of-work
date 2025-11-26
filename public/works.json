@@ -34,7 +34,7 @@
     ],
     "link": "",
     "imageUrl": "circle.jpg",
-    "audioUrl": "cicle.mp3",
+    "audioUrl": "circle.mp3",
     "date": "01/24"
   },
   {
@@ -52,8 +52,9 @@
     ],
     "link": "https://github.com/gurshafriri/audio-spacer/tree/main",
     "imageUrl": "audiospace.jpg",
-    "audioUrl": "audiospace.mp3",
-    "scoreUrl": "audiospace.pdf"
+    "audioUrl": "",
+    "scoreUrl": "",
+    "date": "10/25"
   },
   {
     "id": "6436b632-7c47-446f-8e7c-c4fa4c945152",
@@ -72,7 +73,8 @@
     "link": "",
     "imageUrl": "inexi.jpg",
     "audioUrl": "inexi.mp3",
-    "scoreUrl": "inexi.pdf"
+    "scoreUrl": "inexi.pdf",
+    "date": "11/25"
   },
   {
     "id": "12a1692d-8f87-8043-a86f-cc36455ae44c",
@@ -91,12 +93,13 @@
     ],
     "audioUrl": "asin.mp3",
     "videoUrl": "",
-    "scoreUrl": "asin.pdf"
+    "scoreUrl": "asin.pdf",
+    "date": "07/18"
   },
   {
     "id": "12a1692d-8f87-800d-b9c3-fc8ecd5daa97",
-    "title": "This creative field site ",
-    "description": "A personal homepage for works and creation based on an Art/Tech axis, to showcase both areas of my interest and how they collide ",
+    "title": "This field of work site",
+    "description": "A personal homepage for works and creation based on an Music/Tech axis, to showcase both areas of my interest and how they collide",
     "techScore": 65,
     "artScore": 50,
     "imageUrl": "thissite.jpg",
@@ -110,12 +113,13 @@
     ],
     "audioUrl": "",
     "videoUrl": "",
-    "scoreUrl": ""
+    "scoreUrl": "",
+    "date": "11/25"
   },
   {
     "id": "12a1692d-8f87-807b-a215-f7114d81d0ce",
     "title": "Crabs",
-    "description": "A short piece for piano and reverse companion",
+    "description": "A short piece for piano and the Reverse companion \n\n(Crabs go backwards at times)",
     "techScore": 70,
     "artScore": 75,
     "imageUrl": "crabs.jpg",
@@ -130,12 +134,13 @@
     ],
     "audioUrl": "crabs.mp3",
     "videoUrl": "",
-    "scoreUrl": ""
+    "scoreUrl": "",
+    "date": "02/23"
   },
   {
     "id": "12a1692d-8f87-8047-82b5-fc53b8988690",
     "title": "Reverse companion",
-    "description": "Mobile tool for real time reversing\n",
+    "description": "Homemade iPad tool for real time reversing via mobile control\n",
     "techScore": 80,
     "artScore": 50,
     "imageUrl": "reverse.jpg",
@@ -148,7 +153,8 @@
     ],
     "audioUrl": "",
     "videoUrl": "",
-    "scoreUrl": ""
+    "scoreUrl": "",
+    "date": "01/23"
   },
   {
     "id": "12a1692d-8f87-8065-9c6b-f3b52fce9de2",
@@ -168,7 +174,8 @@
     ],
     "audioUrl": "absurd.mp3",
     "videoUrl": "",
-    "scoreUrl": ""
+    "scoreUrl": "",
+    "date": "08/2017"
   },
   {
     "id": "12a1692d-8f87-80b2-8aa4-d5e449befb36",
@@ -188,7 +195,8 @@
     ],
     "audioUrl": "inout.mp3",
     "videoUrl": "",
-    "scoreUrl": "inout.pdf"
+    "scoreUrl": "inout.pdf",
+    "date": "10/23"
   },
   {
     "id": "12a1692d-8f87-80d9-b0ab-c8d20636f7a8",
@@ -235,7 +243,7 @@
   {
     "id": "12a1692d-8f87-80bf-b20d-d7a2ba12dc2c",
     "title": "A. All of the above B. None of the above",
-    "description": "A for bass flute, bassoon and bass clarinet \nB for flute, contrabassoon, clarinet and live electronics \n\nYou first get everything, you then get nothing, and in nothing you find what you missed at first. ",
+    "description": "A for bass flute, bassoon and bass clarinet \nB for flute, contrabassoon, clarinet and live electronics \n\nThe piece recalls itself to include what's not in it: You A get everything, at B get nothing, by the end you found what you missed at A.",
     "techScore": 70,
     "artScore": 75,
     "imageUrl": "allof.jpg",
@@ -250,7 +258,8 @@
     ],
     "audioUrl": "allof.mp3",
     "videoUrl": "",
-    "scoreUrl": "allof.pdf"
+    "scoreUrl": "allof.pdf",
+    "date": "11/19"
   },
   {
     "id": "12a1692d-8f87-80eb-8b33-db9fa549e045",
@@ -259,7 +268,7 @@
     "techScore": 15,
     "artScore": 80,
     "imageUrl": "alpha.jpg",
-    "link": "https://www.notion.so/Alpha-bend-synchronisation-12a1692d8f8780eb8b33db9fa549e045",
+    "link": "",
     "tags": [
       "2020",
       "Composition",
@@ -268,7 +277,8 @@
     ],
     "audioUrl": "alpha.mp3",
     "videoUrl": "",
-    "scoreUrl": "alpha.pdf"
+    "scoreUrl": "alpha.pdf",
+    "date": "01/2020"
   },
   {
     "id": "12a1692d-8f87-8030-bac4-ed74ce6649ed",
@@ -286,7 +296,8 @@
     ],
     "audioUrl": "",
     "videoUrl": "",
-    "scoreUrl": ""
+    "scoreUrl": "",
+    "date": "05/20"
   },
   {
     "id": "12a1692d-8f87-8047-b0c4-c82bc57455b9",
@@ -305,7 +316,8 @@
     ],
     "audioUrl": "mobile.mp3",
     "videoUrl": "https://www.youtube.com/embed/P-2MkYVtjoE?si=UBKKEx_X40E5cicO",
-    "scoreUrl": "mobile.pdf"
+    "scoreUrl": "mobile.pdf",
+    "date": "06/20"
   },
   {
     "id": "9d196947-47a8-4f04-b585-c491ab30ba8a",
@@ -322,9 +334,10 @@
       "Choir",
       "spectral orchestration"
     ],
-    "audioUrl": "",
+    "audioUrl": "tabur.mp3",
     "videoUrl": "https://www.youtube.com/embed/auITvKDuV1o?si=vpcxmfOBUtDIwKkH",
-    "scoreUrl": "tabur.pdf"
+    "scoreUrl": "tabur.pdf",
+    "date": "08/19"
   },
   {
     "id": "c1d5a813-dff8-4025-805f-1077e3b700df",
@@ -336,14 +349,15 @@
     "link": "",
     "tags": [
       "2024",
-      "Music Tool",
+      "Online sound installation",
       "Elixir",
       "Collaboration",
       "Audio Context"
     ],
     "audioUrl": "",
     "videoUrl": "",
-    "scoreUrl": ""
+    "scoreUrl": "",
+    "date": "01/26"
   },
   {
     "id": "d2338dee-1a1c-4130-bb84-fbcf9deee52d",
@@ -352,7 +366,7 @@
     "techScore": 72,
     "artScore": 85,
     "imageUrl": "locomotion.jpg",
-    "link": "https://www.notion.so/Locomotion-d2338dee1a1c4130bb84fbcf9deee52d",
+    "link": "",
     "tags": [
       "2020",
       "Composition",
@@ -365,6 +379,7 @@
     ],
     "audioUrl": "locomotion.mp3",
     "videoUrl": "",
-    "scoreUrl": "locomotion.pdf"
+    "scoreUrl": "locomotion.pdf",
+    "date": "01/20"
   }
 ]
