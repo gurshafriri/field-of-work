@@ -46,17 +46,17 @@ export const TimelineDrawer: React.FC<TimelineDrawerProps> = ({
         <div 
             className={`fixed bottom-6 z-50 transition-transform duration-300 ease-out right-[calc(1.5rem+12rem+0.75rem)] sm:right-[calc(1.5rem+16rem+0.75rem)]
                 ${isOpen 
-                    ? 'translate-x-0' 
-                    : 'translate-x-[calc(10rem-1.5rem)] sm:translate-x-[calc(12rem-1.5rem)]'
+                    ? 'translate-x-0 opacity-80' 
+                    : 'translate-x-[calc(10rem-1.5rem)] sm:translate-x-[calc(12rem-1.5rem)] bg-transparent'
                 }
             `}
         >
             {/* Main drawer container with integrated pull tab */}
             <div 
-                className={`h-48 sm:h-64 bg-neutral-950/90 backdrop-blur-sm flex overflow-hidden w-40 sm:w-48 transition-[border,shadow] duration-300
+                className={`h-48 sm:h-64  backdrop-blur-sm flex overflow-hidden w-40 sm:w-48 border rounded-lg transition-[border-color,shadow, background-color] duration-300
                     ${isOpen 
-                        ? 'border border-white/20 rounded-lg shadow-[0_0_40px_rgba(0,0,0,0.8)]' 
-                        : 'border-0 shadow-none'
+                        ? 'bg-neutral-950/90 border border-white/20 rounded-lg shadow-[0_0_40px_rgba(0,0,0,0.8)]' 
+                        : 'border-transparent shadow-none bg-transparent'
                     }
                 `}
             >
@@ -69,7 +69,7 @@ export const TimelineDrawer: React.FC<TimelineDrawerProps> = ({
                     className={`w-6 flex flex-col items-center justify-between py-2 bg-black/20 cursor-pointer hover:bg-white/5 shrink-0 border-white/20 transition-[border,shadow,border-radius] duration-300
                         ${isOpen 
                             ? 'border-r rounded-l-lg' 
-                            : 'border rounded-lg shadow-[0_0_40px_rgba(0,0,0,0.8)]'
+                            : 'border rounded-lg shadow-[0_0_40px_rgba(0,0,0,0.8)] opacity-75'
                         }
                     `}
                 >
