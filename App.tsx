@@ -122,13 +122,17 @@ function App() {
       const usableWidth = WORLD_WIDTH - (margin * 2);
       const usableHeight = WORLD_HEIGHT - (margin * 2);
 
+      // Handle potential legacy data or missing scores
+      const techVal = p.techScore ?? 50;
+      const musicVal = p.musicScore ?? (p as any).artScore ?? 50;
+
       // Tech: 0 (Left) -> 100 (Right)
-      const x = margin + (p.techScore / 100) * usableWidth;
+      const x = margin + (techVal / 100) * usableWidth;
       
       // Music: 100 (Top) -> 0 (Bottom)
-      const y = margin + ((100 - p.musicScore) / 100) * usableHeight;
+      const y = margin + ((100 - musicVal) / 100) * usableHeight;
 
-      return { ...p, x, y, vx: 0, vy: 0 };
+      return { ...p, musicScore: musicVal, techScore: techVal, x, y, vx: 0, vy: 0 };
     });
 
     // 2. Collision Resolution (Iterative Repel)
