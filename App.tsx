@@ -475,9 +475,94 @@ function App() {
 
   // --- Effects ---
 
+  // Refs to keep track of state inside event listeners without triggering re-renders
+  const selectedProjectRef = useRef(selectedProject);
+  const isAdminRef = useRef(isAdminOpen);
+  useEffect(() => { selectedProjectRef.current = selectedProject; }, [selectedProject]);
+  useEffect(() => { isAdminRef.current = isAdminOpen; }, [isAdminOpen]);
+
+  // Helper to slugify title
+  const toSlug = (title: string) => title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  // Routing: Handle Hash Changes (Inbound)
   useEffect(() => {
-    const handleHashChange = () => setIsAdminOpen(window.location.hash === '#admin');
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      const currentProject = selectedProjectRef.current;
+      const currentAdmin = isAdminRef.current;
+      
+      // 1. Admin Check
+      if (hash === '#admin') {
+        if (!currentAdmin) {
+            setIsAdminOpen(true);
+            setSelectedProject(null);
+        }
+        return;
+      } 
+      
+      // Exit admin if hash changes away from it
+      if (currentAdmin && hash !== '#admin') {
+        setIsAdminOpen(false);
+      }
+
+      // 2. Project Check
+      if (hash.startsWith('#project/')) {
+        const slugOrId = decodeURIComponent(hash.replace('#project/', ''));
+        
+        // Try matching by slug first (preferred)
+        let project = processedProjects.find(p => toSlug(p.title) === slugOrId);
+        
+        // Fallback to ID match for backward compatibility
+        if (!project) {
+             project = processedProjects.find(p => p.id === slugOrId);
+        }
+        
+        // Only update if the ID is different from what's currently selected
+        if (project && currentProject?.id !== project.id) {
+            setSelectedProject(project);
+        }
+      } else {
+        // 3. Clear Project if hash is cleared
+        // Only clear if we currently have a project selected
+        if (currentProject && !currentAdmin) {
+          setSelectedProject(null);
+        }
+      }
+    };
+
+    // Initial check on mount/data load
+    if (processedProjects.length > 0) {
+        handleHashChange();
+    }
+
     window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [processedProjects]); // Stable dependency
+
+  // Routing: Sync State to Hash (Outbound)
+  useEffect(() => {
+    if (selectedProject) {
+      const slug = toSlug(selectedProject.title);
+      const targetHash = `#project/${slug}`;
+      if (window.location.hash !== targetHash) {
+        window.history.pushState(null, '', targetHash);
+      }
+    } else if (isAdminOpen) {
+       if (window.location.hash !== '#admin') {
+         window.history.pushState(null, '', '#admin');
+       }
+    } else {
+       // Clear hash if state is clean but URL isn't
+       if (window.location.hash.startsWith('#project/') || window.location.hash === '#admin') {
+         // Use replaceState to avoid cluttering history with empty states if possible, 
+         // but pushState is better for "Back" behavior. 
+         // Using ' ' to clear hash visually without reloading.
+         window.history.pushState(null, '', ' ');
+       }
+    }
+  }, [selectedProject, isAdminOpen]);
+
+  useEffect(() => {
     window.addEventListener('resize', handleResize);
     
     // Attach scroll listener to container instead of window
@@ -487,7 +572,6 @@ function App() {
     }
 
     return () => {
-      window.removeEventListener('hashchange', handleHashChange);
       window.removeEventListener('resize', handleResize);
       if (container) {
           container.removeEventListener('scroll', onScroll);

@@ -308,7 +308,7 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({
                 <div className="pt-6 border-t border-white/10 flex items-center justify-between gap-6">
                     
                     {/* Icons Area */}
-                    <div className="flex gap-4">
+                    <div className="flex gap-2">
                          {/* External Link */}
                         {project.link && (
                             <a 
@@ -328,18 +328,29 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({
                                 href={mediaPath(project.scoreUrl)} 
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="relative group p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/5 hover:scale-110 flex items-center justify-center"
-                                title="Full Score"
+                                className="relative group w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/5 hover:scale-110 flex items-center justify-center"
+                                title="Full Score (PDF)"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="m9 13.5 3 3m0 0 3-3m-3 3v-6" opacity="0.5" />
-                                </svg>
-                                {/* Musical Note Overlay */}
-                                <div className="absolute -bottom-1 -right-1 bg-neutral-900 rounded-full p-0.5 border border-white/20">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 text-blue-300">
-                                        <path fillRule="evenodd" d="M19.952 1.651a.75.75 0 0 1 .298.599V16.303a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.403-4.909l2.311-.66a1.5 1.5 0 0 0 1.088-1.442V6.994l-9 2.572v9.737a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.403-4.909l2.311-.66a1.5 1.5 0 0 0 1.088-1.442V9.017 5.25a.75.75 0 0 1 .544-.721l10.5-3a.75.75 0 0 1 .658.122Z" clipRule="evenodd" />
+                                <div className="relative w-6 h-6 flex-shrink-0">
+                                    {/* PDF Icon (Red) */}
+                                    <svg viewBox="0 0 309.267 309.267" className="w-full h-full shadow-sm" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+                                        <g>
+                                            <path style={{ fill: "#E2574C" }} d="M38.658,0h164.23l87.049,86.711v203.227c0,10.679-8.659,19.329-19.329,19.329H38.658c-10.67,0-19.329-8.65-19.329-19.329V19.329C19.329,8.65,27.989,0,38.658,0z"/>
+                                            <path style={{ fill: "#B53629" }} d="M289.658,86.981h-67.372c-10.67,0-19.329-8.659-19.329-19.329V0.193L289.658,86.981z"/>
+                                            <path style={{ fill: "#FFFFFF" }} d="M217.434,146.544c3.238,0,4.823-2.822,4.823-5.557c0-2.832-1.653-5.567-4.823-5.567h-18.44c-3.605,0-5.615,2.986-5.615,6.282v45.317c0,4.04,2.3,6.282,5.412,6.282c3.093,0,5.403-2.242,5.403-6.282v-12.438h11.153c3.46,0,5.19-2.832,5.19-5.644c0-2.754-1.73-5.49-5.19-5.49h-11.153v-16.903C204.194,146.544,217.434,146.544,217.434,146.544z M155.107,135.42h-13.492c-3.663,0-6.263,2.513-6.263,6.243v45.395c0,4.629,3.74,6.079,6.417,6.079h14.159c16.758,0,27.824-11.027,27.824-28.047C183.743,147.095,173.325,135.42,155.107,135.42z M155.755,181.946h-8.225v-35.334h7.413c11.221,0,16.101,7.529,16.101,17.918C171.044,174.253,166.25,181.946,155.755,181.946z M106.33,135.42H92.964c-3.779,0-5.886,2.493-5.886,6.282v45.317c0,4.04,2.416,6.282,5.663,6.282s5.663-2.242,5.663-6.282v-13.231h8.379c10.341,0,18.875-7.326,18.875-19.107C125.659,143.152,117.425,135.42,106.33,135.42z M106.108,163.158h-7.703v-17.097h7.703c4.755,0,7.78,3.711,7.78,8.553C113.878,159.447,110.863,163.158,106.108,163.158z"/>
+                                        </g>
                                     </svg>
+                                    
+                                    {/* Music Note Overlay (Bottom Right) */}
+                                    <div className="absolute -bottom-1.5 -right-1.5 bg-white rounded-full p-0.5 shadow-md border border-neutral-200">
+                                        <svg viewBox="0 0 24 24" fill="none" className="w-3 h-3">
+                                            <path d="M9 19C9 20.6569 7.65685 22 6 22C4.34315 22 3 20.6569 3 19C3 17.3431 4.34315 16 6 16C7.65685 16 9 17.3431 9 19Z" stroke="#1C274C" strokeWidth="1.5"/>
+                                            <path d="M21 17C21 18.6569 19.6569 20 18 20C16.3431 20 15 18.6569 15 17C15 15.3431 16.3431 14 18 14C19.6569 14 21 15.3431 21 17Z" stroke="#1C274C" strokeWidth="1.5"/>
+                                            <path d="M9 19V8" stroke="#1C274C" strokeWidth="1.5"/>
+                                            <path d="M20.25 11.5C20.25 11.9142 20.5858 12.25 21 12.25C21.4142 12.25 21.75 11.9142 21.75 11.5H20.25ZM21.75 11.5V6H20.25V11.5H21.75Z" fill="#1C274C"/>
+                                            <path d="M15.7351 3.75466L11.7351 5.08799C10.4151 5.52801 9.75503 5.74801 9.37752 6.27179C9 6.79556 9 7.49128 9 8.88273V11.9997L21 7.99969V7.54939C21 5.01693 21 3.7507 20.1694 3.15206C19.3388 2.55341 18.1376 2.95383 15.7351 3.75466Z" stroke="#1C274C" strokeWidth="1.5" strokeLinecap="round"/>
+                                        </svg>
+                                    </div>
                                 </div>
                             </a>
                         )}
