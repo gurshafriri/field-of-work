@@ -356,7 +356,7 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({
                          <div className="flex items-center gap-2">
                             <span className="text-[9px] font-bold text-neutral-500 w-8 text-right">MUSIC</span>
                             <div className="flex-1 h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-purple-500/80" style={{ width: `${project.artScore}%` }}></div>
+                                <div className="h-full bg-purple-500/80" style={{ width: `${project.musicScore}%` }}></div>
                             </div>
                          </div>
                     </div>

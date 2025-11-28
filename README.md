@@ -27,9 +27,9 @@ Built directly on the **Web Audio API**, the engine synthesizes sound in real-ti
 -   **Y-Axis Modulation**: Controls pitch harmony and LFO speeds.
 
 ### 📊 Reactive HUD
--   **Audio Visualizer**: A real-time oscilloscope that morphs its shape based on the audio parameters (Smooth sine waves for Art vs. Jagged/Noise for Tech).
+-   **Audio Visualizer**: A real-time oscilloscope that morphs its shape based on the audio parameters (Smooth sine waves for Music vs. Jagged/Noise for Tech).
 -   **Minimap**: A live overview of the entire field and viewport location.
--   **Coordinate Scanner**: Displays the exact Art/Tech score of the current center point.
+-   **Coordinate Scanner**: Displays the exact Music/Tech score of the current center point.
 
 ### 🛠️ Local Content Management
 Includes a hidden "Admin Mode" to manage portfolio content without a database.
@@ -77,7 +77,7 @@ Since this is a static site, content is managed via a JSON file (`public/works.j
 1.  **Enter Admin Mode**: Append `#admin` to your URL (e.g., `http://localhost:5173/#admin`).
 2.  **Manage Content**: Use the sidebar to add new projects or edit existing ones.
     -   *Tech Score (0-100)*: Determines X position.
-    -   *Art Score (0-100)*: Determines Y position.
+    -   *Music Score (0-100)*: Determines Y position.
     -   *Media*: Reference files located in `public/media/`.
 3.  **Save**: Click **"Save to JSON"**. This will download a `works.json` file.
 4.  **Persist**: Move the downloaded file to `public/works.json`, overwriting the old one.
