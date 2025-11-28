@@ -13,6 +13,7 @@ interface ProjectDetailPanelProps {
     onPlayAudio: (p: ProcessedProject) => void;
     onTogglePlay?: (play: boolean) => void;
     onSeek?: (time: number) => void;
+    onViewScore: (url: string) => void;
 }
 
 // Basic Markdown Parser for Bold and Italics
@@ -59,7 +60,8 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({
     onMuteRequest, 
     onPlayAudio,
     onTogglePlay,
-    onSeek
+    onSeek,
+    onViewScore
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [localDuration, setLocalDuration] = useState(0);
@@ -324,12 +326,10 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({
 
                         {/* Full Score PDF */}
                         {project.scoreUrl && (
-                            <a 
-                                href={mediaPath(project.scoreUrl)} 
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="relative group w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/5 hover:scale-110 flex items-center justify-center"
-                                title="Full Score (PDF)"
+                            <button 
+                                onClick={() => onViewScore(mediaPath(project.scoreUrl!))}
+                                className="relative group w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/5 hover:scale-110 flex items-center justify-center cursor-pointer"
+                                title="View Full Score"
                             >
                                 <div className="relative w-6 h-6 flex-shrink-0">
                                     {/* PDF Icon (Red) */}
@@ -352,7 +352,7 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({
                                         </svg>
                                     </div>
                                 </div>
-                            </a>
+                            </button>
                         )}
                     </div>
 

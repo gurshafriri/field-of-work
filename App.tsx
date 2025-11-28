@@ -7,6 +7,7 @@ import { WelcomeOverlay } from './components/WelcomeOverlay';
 import { AdminPanel } from './components/AdminPanel';
 import { ProjectDetailPanel } from './components/ProjectDetailPanel';
 import { TimelineDrawer } from './components/TimelineDrawer';
+import { ScoreViewer } from './components/ScoreViewer';
 
 // Constants for the virtual world size
 const WORLD_WIDTH = 3000;
@@ -14,9 +15,13 @@ const WORLD_HEIGHT = 3000;
 const TILE_SIZE = 320; // Large gap radius to ensure separation
 
 function App() {
-  const [hasStarted, setHasStarted] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(window.location.hash === '#admin');
+  // Check if we're accessing a project directly via URL - if so, skip welcome overlay
+  const initialHash = window.location.hash;
+  const isDirectProjectAccess = initialHash.startsWith('#project/') || initialHash === '#admin';
+  
+  const [hasStarted, setHasStarted] = useState(isDirectProjectAccess);
+  const [isMuted, setIsMuted] = useState(isDirectProjectAccess); // Mute when accessing directly
+  const [isAdminOpen, setIsAdminOpen] = useState(initialHash === '#admin');
   
   // Data State
   const [rawProjects, setRawProjects] = useState<Project[]>([]);
@@ -31,6 +36,9 @@ function App() {
   const [selectedProject, setSelectedProject] = useState<ProcessedProject | null>(null);
   const [highlightedProject, setHighlightedProject] = useState<ProcessedProject | null>(null);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+
+  // Score Viewer State
+  const [viewingScoreUrl, setViewingScoreUrl] = useState<string | null>(null);
 
   // Audio Playback State
   const [playingProject, setPlayingProject] = useState<ProcessedProject | null>(null);
@@ -478,11 +486,91 @@ function App() {
   // Refs to keep track of state inside event listeners without triggering re-renders
   const selectedProjectRef = useRef(selectedProject);
   const isAdminRef = useRef(isAdminOpen);
+  const hasStartedRef = useRef(hasStarted);
+  const pendingHashMatchRef = useRef<string | null>(null); // Track hash we're trying to match
+  
   useEffect(() => { selectedProjectRef.current = selectedProject; }, [selectedProject]);
   useEffect(() => { isAdminRef.current = isAdminOpen; }, [isAdminOpen]);
+  useEffect(() => { hasStartedRef.current = hasStarted; }, [hasStarted]);
+  
+  // Track when we have a hash to match
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#project/') && !selectedProject) {
+      pendingHashMatchRef.current = hash;
+    } else if (selectedProject) {
+      pendingHashMatchRef.current = null; // Clear when project is matched
+    }
+  }, [selectedProject]);
+
+  // Start audio service when accessing directly via URL
+  useEffect(() => {
+    if (hasStarted && isDirectProjectAccess) {
+      audioService.start().catch(err => {
+        console.warn('Failed to start audio service on direct access:', err);
+      });
+    }
+  }, [hasStarted, isDirectProjectAccess]);
 
   // Helper to slugify title
   const toSlug = (title: string) => title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  // Ensure project is set on direct access once projects are loaded
+  // Use a ref to track if we've already processed the initial hash to prevent re-running
+  const hasProcessedInitialHashRef = useRef(false);
+  const zoomRef = useRef(zoom);
+  
+  // Keep zoom ref updated
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+  
+  useEffect(() => {
+    // Only process once on initial load when projects become available
+    if (hasProcessedInitialHashRef.current || !isDirectProjectAccess || !processedProjects.length) return;
+    
+    const hash = window.location.hash;
+    if (!hash.startsWith('#project/')) {
+      hasProcessedInitialHashRef.current = true; // Mark as processed even if no project hash
+      return;
+    }
+    
+    const slugOrId = decodeURIComponent(hash.replace('#project/', ''));
+    
+    // Try matching by slug first (preferred)
+    let project = processedProjects.find(p => toSlug(p.title) === slugOrId);
+    
+    // Fallback to ID match for backward compatibility
+    if (!project) {
+      project = processedProjects.find(p => p.id === slugOrId);
+    }
+    
+    // Set project if found and not already selected (using ref to avoid dependency issues)
+    if (project && selectedProjectRef.current?.id !== project.id) {
+      setSelectedProject(project);
+      pendingHashMatchRef.current = null; // Clear pending match
+      hasProcessedInitialHashRef.current = true; // Mark as processed
+      
+      // Scroll to project after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        if (scrollContainerRef.current) {
+          // Use zoom from ref to avoid dependency issues
+          const currentZoom = zoomRef.current;
+          const scaledX = project.x * currentZoom;
+          const scaledY = project.y * currentZoom;
+          scrollContainerRef.current.scrollTo({
+            left: scaledX - (window.innerWidth / 2),
+            top: scaledY - (window.innerHeight / 2),
+            behavior: 'auto'
+          });
+          requestAnimationFrame(updateState);
+        }
+      }, 100);
+    } else {
+      // No project found, but mark as processed to avoid re-checking
+      hasProcessedInitialHashRef.current = true;
+    }
+  }, [processedProjects.length, isDirectProjectAccess]); // Only depend on length and access flag
 
   // Routing: Handle Hash Changes (Inbound)
   useEffect(() => {
@@ -517,9 +605,40 @@ function App() {
              project = processedProjects.find(p => p.id === slugOrId);
         }
         
-        // Only update if the ID is different from what's currently selected
-        if (project && currentProject?.id !== project.id) {
-            setSelectedProject(project);
+        // Set project if found
+        if (project) {
+            // Always set the project when found via hash (ensures it opens on direct access)
+            // Only skip if it's already the same project to avoid unnecessary re-renders
+            if (currentProject?.id !== project.id) {
+                setSelectedProject(project);
+                pendingHashMatchRef.current = null; // Clear pending match
+            }
+            
+            // Auto-start if deep linking (and mute)
+            if (!hasStartedRef.current) {
+                setHasStarted(true);
+                setIsMuted(true);
+            }
+            
+            // Always scroll to project when accessing via URL (whether just started or already started)
+            // We use a timeout to allow the DOM to settle (removing WelcomeOverlay if needed)
+            setTimeout(() => {
+                if (scrollContainerRef.current) {
+                    const scaledX = project.x * zoom;
+                    const scaledY = project.y * zoom;
+                    scrollContainerRef.current.scrollTo({
+                        left: scaledX - (window.innerWidth / 2),
+                        top: scaledY - (window.innerHeight / 2),
+                        behavior: 'auto'
+                    });
+                    // Initialize audio params
+                    requestAnimationFrame(updateState);
+                }
+            }, hasStartedRef.current ? 50 : 100); // Shorter delay if already started
+        } else if (hash.startsWith('#project/')) {
+            // Hash exists but project not found - might still be loading
+            // Log for debugging
+            console.warn('Project not found for hash:', hash);
         }
       } else {
         // 3. Clear Project if hash is cleared
@@ -541,6 +660,12 @@ function App() {
 
   // Routing: Sync State to Hash (Outbound)
   useEffect(() => {
+    // Don't modify hash while loading - wait for projects to load and match
+    if (isLoading) return;
+    
+    // Don't clear hash if we're still waiting to match a project from the URL
+    if (pendingHashMatchRef.current && !selectedProject) return;
+    
     if (selectedProject) {
       const slug = toSlug(selectedProject.title);
       const targetHash = `#project/${slug}`;
@@ -553,14 +678,14 @@ function App() {
        }
     } else {
        // Clear hash if state is clean but URL isn't
-       if (window.location.hash.startsWith('#project/') || window.location.hash === '#admin') {
-         // Use replaceState to avoid cluttering history with empty states if possible, 
-         // but pushState is better for "Back" behavior. 
-         // Using ' ' to clear hash visually without reloading.
+       // Only clear if we're not waiting for a project match
+       const currentHash = window.location.hash;
+       if ((currentHash.startsWith('#project/') || currentHash === '#admin')) {
+         // Safe to clear - no pending match and projects are loaded
          window.history.pushState(null, '', ' ');
        }
     }
-  }, [selectedProject, isAdminOpen]);
+  }, [selectedProject, isAdminOpen, isLoading]);
 
   useEffect(() => {
     window.addEventListener('resize', handleResize);
@@ -729,7 +854,16 @@ function App() {
           onPlayAudio={handlePlayAudio}
           onTogglePlay={handleTogglePlay}
           onSeek={handleSeek}
+          onViewScore={(url) => setViewingScoreUrl(url)}
       />
+      
+      {/* Global Score Viewer Overlay */}
+      {viewingScoreUrl && (
+        <ScoreViewer 
+          pdfUrl={viewingScoreUrl}
+          onClose={() => setViewingScoreUrl(null)}
+        />
+      )}
 
             {/* HUD - Placed OUTSIDE the scroll container to ensure fixed positioning works reliably */}
             {hasStarted && (
