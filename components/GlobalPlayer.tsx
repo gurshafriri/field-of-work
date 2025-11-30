@@ -22,9 +22,9 @@ export const GlobalPlayer = forwardRef<GlobalAudioHandle, GlobalAudioControllerP
         const isAbsolute = project.audioUrl?.startsWith('http');
         const cleanPath = project.audioUrl?.startsWith('/') ? project.audioUrl.slice(1) : project.audioUrl;
         
-        const audioSrc = isAbsolute 
+        const audioSrc = (isAbsolute 
             ? project.audioUrl 
-            : `${baseUrl}media/${cleanPath}`.replace('//', '/');
+            : `${baseUrl}media/${cleanPath}`.replace('//', '/')) || '';
 
         // Expose seek method to parent
         useImperativeHandle(ref, () => ({
