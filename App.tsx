@@ -263,7 +263,7 @@ function App() {
 
   // --- Event Handlers ---
 
-  const updateState = () => {
+  const updateState = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
@@ -295,20 +295,20 @@ function App() {
         // Pass normalized ratios (0-1) to audio service
         audioService.updateParams(xRatio, 1 - yRatio);
     }
-  };
+  }, [hasStarted]);
 
-  const onScroll = () => {
+  const onScroll = useCallback(() => {
       if (rafRef.current) return;
       rafRef.current = requestAnimationFrame(() => {
           updateState();
           rafRef.current = null;
       });
-  };
+  }, [updateState]);
 
-  const handleResize = () => {
+  const handleResize = useCallback(() => {
     setWindowSize({ w: window.innerWidth, h: window.innerHeight });
     updateState();
-  };
+  }, [updateState]);
 
   // Drag Logic
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -703,7 +703,7 @@ function App() {
       }
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [hasStarted, zoom]); 
+  }, [hasStarted, zoom, isLoading, handleResize, onScroll]); 
 
   const startExperience = async () => {
     await audioService.start();
