@@ -1,4 +1,4 @@
-# Gur's works portfolio: The Creative Field
+# Gur's works portfolio: Field of Work
 
 A spatial, audio-visual portfolio experiment that maps creative works onto a 2D plane defined by **Technology** (X-axis) and **Music** (Y-axis).
 
@@ -54,8 +54,8 @@ Includes a hidden "Admin Mode" to manage portfolio content without a database.
 
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/gurshafriri/gurs-creative-field.git
-    cd gurs-creative-field
+    git clone https://github.com/gurshafriri/field-of-work.git
+    cd field-of-work
     ```
 
 2.  Install dependencies:

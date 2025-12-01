@@ -79,7 +79,7 @@ function App() {
 
     const loadData = async () => {
       try {
-        // "/works.json" in dev or "/gurs-creative-field/works.json" on GitHub Pages
+        // "/works.json" in dev or "/field-of-work/works.json" on GitHub Pages
         const fullUrl = `${baseUrl}works.json`;
 
         const response = await fetch(fullUrl);

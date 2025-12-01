@@ -1,9 +1,9 @@
 {
-  "name": "sonic-matrix-portfolio",
+  "name": "field-of-work",
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://YOUR_USERNAME.github.io/YOUR_REPO_NAME",
+  "homepage": "https://field.gurworks.com",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
