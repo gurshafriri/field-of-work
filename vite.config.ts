@@ -12,7 +12,7 @@ export default defineConfig({
   // IMPORTANT: Replace 'YOUR_REPO_NAME' with your actual GitHub repository name.
   // If deploying to the root of a domain, use '/'
   // If deploying to github pages user.github.io/repo/, use '/repo/'
-  base: '/gurs-creative-field/', 
+  base: '/', 
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),
