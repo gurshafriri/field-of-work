@@ -20,6 +20,8 @@ interface MinimapProps {
     isPanelOpen: boolean;
     isTimelineOpen?: boolean;
     onToggleTimeline?: () => void;
+    onDragStart?: () => void;
+    onDragEnd?: () => void;
 }
 
 export const Minimap: React.FC<MinimapProps> = ({ 
@@ -38,7 +40,9 @@ export const Minimap: React.FC<MinimapProps> = ({
     onToggleMute,
     isPanelOpen,
     isTimelineOpen,
-    onToggleTimeline
+    onToggleTimeline,
+    onDragStart,
+    onDragEnd
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -160,6 +164,7 @@ export const Minimap: React.FC<MinimapProps> = ({
         }
 
         setIsDragging(true);
+        onDragStart?.();
     };
 
     // Handle Drag Move
@@ -195,6 +200,7 @@ export const Minimap: React.FC<MinimapProps> = ({
 
         const handleGlobalUp = () => {
             setIsDragging(false);
+            onDragEnd?.();
         };
 
         if (isDragging) {

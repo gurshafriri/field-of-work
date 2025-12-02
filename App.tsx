@@ -23,6 +23,9 @@ function App() {
   const [isMuted, setIsMuted] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(initialHash === '#admin');
   
+  // UI State
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(true);
+  
   // Data State
   const [rawProjects, setRawProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -311,25 +314,52 @@ function App() {
   }, [updateState]);
 
   // Drag Logic
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
     if (!hasStarted || isAdminOpen || selectedProject || !scrollContainerRef.current) return;
     if ((e.target as HTMLElement).closest('.project-tile')) return;
 
     setIsDragging(true);
-    dragStart.current = { x: e.clientX, y: e.clientY };
+    
+    let clientX, clientY;
+    if ('touches' in e) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+    } else {
+        clientX = (e as React.MouseEvent).clientX;
+        clientY = (e as React.MouseEvent).clientY;
+    }
+
+    dragStart.current = { x: clientX, y: clientY };
     scrollStart.current = { 
         x: scrollContainerRef.current.scrollLeft, 
         y: scrollContainerRef.current.scrollTop 
     };
-    document.body.style.cursor = 'grabbing';
+    // Only set cursor if not touch
+    if (!('touches' in e)) {
+        document.body.style.cursor = 'grabbing';
+    }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDragging || !hasStarted || isAdminOpen || !scrollContainerRef.current) return;
-    e.preventDefault();
+    // e.preventDefault(); // Removing this might allow scrolling, but we want custom drag. 
+    // However, for touch, preventing default might block native behaviors. 
+    // Let's keep it for mouse but be careful with touch.
+    if (!('touches' in e)) {
+        e.preventDefault();
+    }
     
-    const dx = e.clientX - dragStart.current.x;
-    const dy = e.clientY - dragStart.current.y;
+    let clientX, clientY;
+    if ('touches' in e) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+    } else {
+        clientX = (e as React.MouseEvent).clientX;
+        clientY = (e as React.MouseEvent).clientY;
+    }
+    
+    const dx = clientX - dragStart.current.x;
+    const dy = clientY - dragStart.current.y;
 
     scrollContainerRef.current.scrollTo(
       scrollStart.current.x - dx,
@@ -788,6 +818,9 @@ function App() {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onTouchStart={handleMouseDown}
+            onTouchMove={handleMouseMove}
+            onTouchEnd={handleMouseUp}
             style={{ 
                 width: `${WORLD_WIDTH * zoom}px`, 
                 height: `${WORLD_HEIGHT * zoom}px`,
@@ -896,73 +929,92 @@ function App() {
                         isPanelOpen={!!selectedProject}
                         isTimelineOpen={isTimelineOpen}
                         onToggleTimeline={() => setIsTimelineOpen(!isTimelineOpen)}
+                        onDragStart={() => setIsDragging(true)}
+                        onDragEnd={() => setIsDragging(false)}
                     />
             
             {/* Left Top: Merged Info, Search & Now Playing */}
-            <div className="fixed top-4 left-4 right-4 md:top-6 md:left-6 md:right-auto z-50 flex flex-col gap-3 pointer-events-none">
-                <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-sm overflow-hidden shadow-2xl w-full md:w-[280px] pointer-events-auto">
-                    <div className="p-4 border-b border-white/10 flex justify-between items-center gap-2">
-                        <div>
-                            <h2 className="text-white font-semibold text-lg tracking-wider leading-none">
-                                <span className="bg-gradient-to-r from-purple-300 to-blue-300 text-transparent bg-clip-text">Field of work</span>
-                            </h2>
-                            <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">by Gur Shafriri</p>
+            <div className={`fixed top-4 left-4 right-auto md:top-6 md:left-6 z-50 flex flex-col gap-3 pointer-events-none transition-opacity duration-300 ${isDragging ? 'opacity-20' : 'opacity-100'}`}>
+                <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-sm overflow-hidden shadow-2xl w-fit max-w-[calc(100vw-2rem)] pointer-events-auto">
+                    <div className="p-2 border-b border-white/10 flex justify-between items-center gap-4">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div>
+                                <h2 className="text-white font-semibold text-base tracking-wider leading-none">
+                                    <span className="bg-gradient-to-r from-purple-300 to-blue-300 text-transparent bg-clip-text">Field of work</span>
+                                </h2>
+                                <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-0.5">by Gur Shafriri</p>
+                            </div>
                         </div>
 
-                        {/* Playing Badge (Mini) */}
-                        {playingProject && (
-                            <div 
-                                onClick={() => setSelectedProject(playingProject)}
-                                className="relative w-10 h-10 shrink-0 cursor-pointer group rounded-md overflow-hidden border border-white/20 hover:border-blue-400 transition-colors"
-                                title={`Playing: ${playingProject.title}`}
+                        <div className="flex items-center gap-2">
+                            {/* Collapse Toggle Button (Magnifying Glass) */}
+                            <button 
+                                onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
+                                className={`text-neutral-400 hover:text-white p-1.5 rounded hover:bg-white/10 transition-colors ${!isPanelCollapsed ? 'text-white bg-white/10' : ''}`}
+                                aria-label={isPanelCollapsed ? "Show search" : "Hide search"}
                             >
-                                {/* Background Image */}
-                                {playingProject.imageUrl ? (
-                                    <img 
-                                        src={mediaPath(playingProject.imageUrl)} 
-                                        alt={playingProject.title}
-                                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-neutral-800" />
-                                )}
-                                
-                                {/* Animation Overlay */}
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                                    {isAudioPlaying ? (
-                                        <div className="flex gap-0.5 items-center">
-                                            <div className="w-0.5 h-2 bg-white animate-[bounce_1s_infinite]" />
-                                            <div className="w-0.5 h-3 bg-white animate-[bounce_1.2s_infinite]" />
-                                            <div className="w-0.5 h-2 bg-white animate-[bounce_0.8s_infinite]" />
-                                        </div>
-                                    ) : (
-                                        <div className="w-2 h-2 rounded-full bg-white/50" />
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    
-                    <div className="p-2 bg-white/5 space-y-2">
-                        {/* Search Bar */}
-                        <div className="flex items-center bg-black/50 rounded-sm border border-white/5">
-                             <div className="pl-2 text-neutral-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                                 </svg>
-                            </div>
-                            <input 
-                                type="text" 
-                                placeholder="Search works and tags..." 
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="bg-transparent border-none text-white text-xs p-2 pl-2 w-full focus:outline-none placeholder:text-neutral-600 font-mono"
-                            />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} className="pr-2 text-neutral-500 hover:text-white">
-                                    ✕
-                                </button>
+                            </button>
+
+                            {/* Playing Badge (Mini) */}
+                            {playingProject && (
+                                <div 
+                                    onClick={() => setSelectedProject(playingProject)}
+                                    className="relative w-8 h-8 shrink-0 cursor-pointer group rounded-md overflow-hidden border border-white/20 hover:border-blue-400 transition-colors"
+                                    title={`Playing: ${playingProject.title}`}
+                                >
+                                    {/* Background Image */}
+                                    {playingProject.imageUrl ? (
+                                        <img 
+                                            src={mediaPath(playingProject.imageUrl)} 
+                                            alt={playingProject.title}
+                                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-neutral-800" />
+                                    )}
+                                    
+                                    {/* Animation Overlay */}
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                        {isAudioPlaying ? (
+                                            <div className="flex gap-0.5 items-center">
+                                                <div className="w-0.5 h-2 bg-white animate-[bounce_1s_infinite]" />
+                                                <div className="w-0.5 h-3 bg-white animate-[bounce_1.2s_infinite]" />
+                                                <div className="w-0.5 h-2 bg-white animate-[bounce_0.8s_infinite]" />
+                                            </div>
+                                        ) : (
+                                            <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
+                                        )}
+                                    </div>
+                                </div>
                             )}
+                        </div>
+                    </div>
+                    
+                    <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isPanelCollapsed ? 'max-h-0 opacity-0' : 'max-h-20 opacity-100'}`}>
+                        <div className="p-2 bg-white/5 space-y-2">
+                            {/* Search Bar */}
+                            <div className="flex items-center bg-black/50 rounded-sm border border-white/5">
+                                 <div className="pl-2 text-neutral-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                                    </svg>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    placeholder="Search works and tags..." 
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="bg-transparent border-none text-white text-xs p-2 pl-2 w-full focus:outline-none placeholder:text-neutral-600 font-mono"
+                                />
+                                {searchQuery && (
+                                    <button onClick={() => setSearchQuery('')} className="pr-2 text-neutral-500 hover:text-white">
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
