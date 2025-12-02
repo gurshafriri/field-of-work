@@ -42,7 +42,7 @@
   {
     "id": "738fd11c-4126-42d4-a075-c317f9df0607",
     "title": "Audio Spacer",
-    "description": "A tool for slicing, shifting and distributing audio in space. \n",
+    "description": "*Used in* [Inhibition/Exhibition I](/#project/inhibition-exhibition-i)\n———\n A tool for slicing, shifting and distributing audio in space. \n",
     "musicScore": 58,
     "techScore": 90,
     "tags": [
@@ -61,7 +61,7 @@
   {
     "id": "6436b632-7c47-446f-8e7c-c4fa4c945152",
     "title": "Inhibition/Exhibition I",
-    "description": "“Il ne faut donc pas dire que notre corps est dans l'espace ni d'ailleurs qu'il est dans le temps. Il habite l'espace et le temps.” \n“Thus, we must not say that our body is in space, nor for that matter in time. It inhabits space and time.”\nMaurice Merleau‑Ponty \n\nInhibition/Exhibition I (“InExI”), for amplified instrument (electric guitar in this version) and the audio spacer, is a live electroacoustic performance in a dark room with an 8-speaker configuration. The attached recording is a binaural rendering, yet it is best approached by imagining the possibility of moving through the space and perceiving the work from changing vantage points, rather than following the score or a video. \n\nThe audio spacer (github.com/gurshafriri/audio-spacer) is a Max/MSP-based tool with controls to record, slice, shift, and disperse sound within a spatial field. In InExI, it functions both as the primary instrument and as the source of the musical material, process, and form. \n\nNeural inhibition and predictive coding shape how we experience light and sound. We lock visuals in space to allow a sense of stability for our body; we eliminate static sound and emphasize its temporal variation to track time. The slicing, shifting, and redistribution of guitar sounds as performed by the audio spacer allow the listener to suspend both habitual processing and intellectual analysis. Combined with the dark room as a visual constraint, they might find themselves re-applying visuospatial synthesis patterns on sound in place of light, bypassing some of the primal inhibitions we impose on it. \n\nAs we attempt to reconstruct stability from whatever we can grasp, even microtonal harmonies and irrational meters resonate with our memories of musical constructs and become unexpected anchors. Both the audio spacer as a tool and InExI as a piece explore this reconstruction of sound in space as a means of, if only for a moment, disorienting our temporal and spatial perception and triggering a new perspective on experience. \n",
+    "description": "*Using the* [Audio spacer](/#project/audio-spacer)\n———\n “Il ne faut donc pas dire que notre corps est dans l'espace ni d'ailleurs qu'il est dans le temps. Il habite l'espace et le temps.” \n“Thus, we must not say that our body is in space, nor for that matter in time. It inhabits space and time.”\n—Maurice Merleau‑Ponty \n\nInhibition/Exhibition I (“InExI”), for amplified instrument (electric guitar in this version) and the audio spacer, is a live electroacoustic performance in a dark room with an 8-speaker configuration. The attached recording is a binaural rendering, yet it is best approached by imagining the possibility of moving through the space and perceiving the work from changing vantage points, rather than following the score or a video. \n\nThe audio spacer (github.com/gurshafriri/audio-spacer) is a Max/MSP-based tool with controls to record, slice, shift, and disperse sound within a spatial field. In InExI, it functions both as the primary instrument and as the source of the musical material, process, and form. \n\nNeural inhibition and predictive coding shape how we experience light and sound. We lock visuals in space to allow a sense of stability for our body; we eliminate static sound and emphasize its temporal variation to track time. The slicing, shifting, and redistribution of guitar sounds as performed by the audio spacer allow the listener to suspend both habitual processing and intellectual analysis. Combined with the dark room as a visual constraint, they might find themselves re-applying visuospatial synthesis patterns on sound in place of light, bypassing some of the primal inhibitions we impose on it. \n\nAs we attempt to reconstruct stability from whatever we can grasp, even microtonal harmonies and irrational meters resonate with our memories of musical constructs and become unexpected anchors. Both the audio spacer as a tool and InExI as a piece explore this reconstruction of sound in space as a means of, if only for a moment, disorienting our temporal and spatial perception and triggering a new perspective on experience. \n",
     "musicScore": 90,
     "techScore": 70,
     "tags": [
@@ -123,7 +123,7 @@
   {
     "id": "12a1692d-8f87-807b-a215-f7114d81d0ce",
     "title": "Crabs",
-    "description": "A short piece for piano and the Reverse companion \n\n(Crabs go backwards at times)",
+    "description": "*Using the* [Reverse companion](/#project/reverse-companion)\n———\nA short piece for piano and the Reverse companion \n\n(Crabs go backwards at times)",
     "techScore": 70,
     "musicScore": 75,
     "imageUrl": "crabs.jpg",
@@ -145,7 +145,7 @@
   {
     "id": "12a1692d-8f87-8047-82b5-fc53b8988690",
     "title": "Reverse companion",
-    "description": "Homemade iPad tool for real time reversing via mobile control\n",
+    "description": "*Used in* [Crabs](/#project/crabs)\n———\n Homemade iPad tool for real time reversing via mobile control\n",
     "techScore": 80,
     "musicScore": 50,
     "imageUrl": "reverse.jpg",
@@ -292,7 +292,7 @@
   {
     "id": "12a1692d-8f87-8030-bac4-ed74ce6649ed",
     "title": "Averager",
-    "description": "Max for Live device for creating pitch sets with a target average pitch",
+    "description": "*Used in* [Mobile](https://field.gurworks.com/#project/mobile)\n———\n Max for Live device for creating pitch sets with a target average pitch",
     "techScore": 86,
     "musicScore": 46,
     "imageUrl": "averager.jpg",
@@ -311,7 +311,7 @@
   {
     "id": "12a1692d-8f87-8047-b0c4-c82bc57455b9",
     "title": "Mobile",
-    "description": "“To most people who look at a mobile,\nit’s no more than a series of flat objects that move.\nTo a few, though, it may be poetry.”\n— Alexander Calder\n\nStudies show that we tend to be remarkably accurate at identifying the average pitch within a series of random pitches. This insight inspired Mobile, a piece for mixed ensemble built on a new system of pitch organization — one centered on the average pitch rather than the tonic or fundamental frequency familiar from tonal or spectral music.\n\nLike a Calder mobile, the piece is constructed from a set of carefully balanced “objects.” Each object averages to a particular pitch, and the ensemble of objects, in turn, revolves around D4. Most of these objects were first created using Averager (github.com/gurshafriri/averager), a Max for Live MIDI device built as a computer-aided composition tool while composing the work. Averager generates random pitch sets whose average matches a target pitch. The user can control the number of notes, the range around the average, and several playback parameters for live or studio contexts.\n\nComposing with this approach turns pitch manipulation into a complex act of equilibrium: every note shifted upward or downward requires a counterbalance elsewhere — just as a sculptor must adjust each element of a mobile before allowing it to move freely in space. Timbre, contour, rhythm, and pace take on a larger role as tools for shaping the piece’s form and flow.\n\nThis method of average-based organization echoes the same principle of balance that guided composers from cantus firmus to dodecaphony: what rises must eventually fall, and vice versa. In that sense, the twelve-tone technique can be seen as a flat and fixed realization of an average-based system — an ever-balanced set of pitches that defines motion through stability. Is Mobile a static or a moving work of art? The listener may change their mind throughout, perhaps reaching balance by the end.\n",
+    "description": "*Using the* [Averager](https://field.gurworks.com/#project/averager)\n———\n“To most people who look at a mobile,\nit’s no more than a series of flat objects that move.\nTo a few, though, it may be poetry.”\n— Alexander Calder\n\nStudies show that we tend to be remarkably accurate at identifying the average pitch within a series of random pitches. This insight inspired Mobile, a piece for mixed ensemble built on a new system of pitch organization — one centered on the average pitch rather than the tonic or fundamental frequency familiar from tonal or spectral music.\n\nLike a Calder mobile, the piece is constructed from a set of carefully balanced “objects.” Each object averages to a particular pitch, and the ensemble of objects, in turn, revolves around D4. Most of these objects were first created using Averager (github.com/gurshafriri/averager), a Max for Live MIDI device built as a computer-aided composition tool while composing the work. Averager generates random pitch sets whose average matches a target pitch. The user can control the number of notes, the range around the average, and several playback parameters for live or studio contexts.\n\nComposing with this approach turns pitch manipulation into a complex act of equilibrium: every note shifted upward or downward requires a counterbalance elsewhere — just as a sculptor must adjust each element of a mobile before allowing it to move freely in space. Timbre, contour, rhythm, and pace take on a larger role as tools for shaping the piece’s form and flow.\n\nThis method of average-based organization echoes the same principle of balance that guided composers from cantus firmus to dodecaphony: what rises must eventually fall, and vice versa. In that sense, the twelve-tone technique can be seen as a flat and fixed realization of an average-based system — an ever-balanced set of pitches that defines motion through stability. Is Mobile a static or a moving work of art? The listener may change their mind throughout, perhaps reaching balance by the end.\n",
     "techScore": 60,
     "musicScore": 90,
     "imageUrl": "mobile.jpg",
@@ -353,11 +353,11 @@
   {
     "id": "c1d5a813-dff8-4025-805f-1077e3b700df",
     "title": "The Canvas",
-    "description": "virtual open space for placing auditory events saved on our joint timeline. In early stages. ",
+    "description": "We have only one timeline. We have only one canvas. The past is in the past. \n 'The Canvas' is a virtual open space for placing auditory events saved on our joint timeline. In early stages. ",
     "techScore": 90,
     "musicScore": 44,
-    "imageUrl": "",
-    "link": "",
+    "imageUrl": "thecanvas.jpg",
+    "link": "https://canvas.gurworks.com",
     "tags": [
       "2024",
       "Online sound installation",

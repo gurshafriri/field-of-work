@@ -16,14 +16,31 @@ interface ProjectDetailPanelProps {
     onViewScore: (url: string) => void;
 }
 
-// Basic Markdown Parser for Bold and Italics
+// Basic Markdown Parser for Bold, Italics, and Links
 const renderMarkdown = (text: string) => {
     const lines = text.split('\n');
     return lines.map((line, lineIdx) => {
-        // Split by bold syntax **text**
-        const parts = line.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+        // Split by link [text](url), bold **text**, and italic *text*
+        // Note: We use \*(?!\*) to ensure we don't match '**' as start of italics
+        const parts = line.split(/(\[.*?\]\(.*?\)|\*\*.*?\*\*|\*(?!\*).*?\*)/g);
         
         const content = parts.map((part, i) => {
+            if (part.startsWith('[') && part.endsWith(')')) {
+                const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
+                if (match) {
+                    return (
+                        <a 
+                            key={i} 
+                            href={match[2]} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 transition-colors"
+                        >
+                            {match[1]}
+                        </a>
+                    );
+                }
+            }
             if (part.startsWith('**') && part.endsWith('**')) {
                 return <strong key={i} className="font-semibold text-white">{part.slice(2, -2)}</strong>;
             }
