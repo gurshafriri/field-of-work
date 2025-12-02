@@ -82,6 +82,7 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [localDuration, setLocalDuration] = useState(0);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
     // Monitor for when the iframe grabs focus
     useEffect(() => {
@@ -96,6 +97,18 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({
         window.addEventListener('blur', handleWindowBlur);
         return () => window.removeEventListener('blur', handleWindowBlur);
     }, [project, onMuteRequest]);
+
+    // Handle ESC key to close image modal
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isImageModalOpen) {
+                setIsImageModalOpen(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [isImageModalOpen]);
 
     // Pre-fetch duration for display if audio exists
     useEffect(() => {
@@ -226,12 +239,26 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({
                         allowFullScreen
                     ></iframe>
                 ) : project.imageUrl ? (
-                    <img 
-                        src={mediaPath(project.imageUrl)} 
-                        alt={project.title} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                    />
+                    <div 
+                        className="w-full h-full cursor-pointer group relative"
+                        onClick={() => setIsImageModalOpen(true)}
+                        title="Click to view full size"
+                    >
+                        <img 
+                            src={mediaPath(project.imageUrl)} 
+                            alt={project.title} 
+                            className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        {/* Expand icon hint */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                            <div className="bg-black/60 backdrop-blur-sm rounded-full p-3 border border-white/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="white" className="w-8 h-8">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-neutral-700 bg-neutral-900">
                         <div className="flex flex-col items-center gap-2">
@@ -412,6 +439,42 @@ export const ProjectDetailPanel: React.FC<ProjectDetailPanelProps> = ({
                 </div>
 
             </div>
+
+            {/* Full-Size Image Modal */}
+            {isImageModalOpen && project.imageUrl && (
+                <div 
+                    className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
+                    onClick={() => setIsImageModalOpen(false)}
+                >
+                    {/* Close button */}
+                    <button 
+                        onClick={() => setIsImageModalOpen(false)}
+                        className="absolute top-4 right-4 z-50 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all hover:scale-110"
+                        title="Close (ESC)"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+
+                    {/* Image container */}
+                    <div 
+                        className="relative max-w-[95vw] max-h-[95vh] flex items-center justify-center"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img 
+                            src={mediaPath(project.imageUrl)} 
+                            alt={project.title} 
+                            className="max-w-full max-h-[95vh] object-contain shadow-2xl rounded-lg"
+                        />
+                    </div>
+
+                    {/* Click anywhere hint */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-neutral-400 text-sm font-light">
+                        Click anywhere or press ESC to close
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
