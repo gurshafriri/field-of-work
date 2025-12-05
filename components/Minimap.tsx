@@ -266,26 +266,26 @@ export const Minimap: React.FC<MinimapProps> = ({
                     />
                 </div>
                 {/* Tech Label (Floating above bar) */}
-                <div className="absolute bottom-1.5 left-1 z-20 flex items-center gap-1 pointer-events-none">
+                <div className="absolute bottom-1.5 right-1 z-20 flex items-center gap-1 pointer-events-none">
                     <span className="text-[10px] font-bold text-neutral-500 tracking-widest">TECH</span>
                     <span className="text-[10px] font-mono text-blue-300 min-w-[20px]">{Math.round(techScore)}</span>
                 </div>
 
-                {/* Music: Right Bar */}
-                <div className="absolute top-0 right-0 h-full w-0.5 bg-neutral-800 overflow-hidden z-20">
+                {/* Music: Left Bar */}
+                <div className="absolute top-0 left-0 h-full w-0.5 bg-neutral-800 overflow-hidden z-20">
                      <div 
                         className="w-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,1)] absolute bottom-0"
                         style={{ height: `${musicScore}%` }}
                     />
                 </div>
-                {/* Music Label (Floating left of bar) */}
-                <div className="absolute top-1 right-2 z-20 flex items-center gap-1 pointer-events-none">
-                    <span className="text-[10px] font-mono text-purple-300 min-w-[20px] text-right">{Math.round(musicScore)}</span>
+                {/* Music Label (Floating right of bar) */}
+                <div className="absolute top-1 left-2 z-20 flex items-center gap-1 pointer-events-none">
                     <span className="text-[10px] font-bold text-neutral-500 tracking-widest">MUSIC</span>
+                    <span className="text-[10px] font-mono text-purple-300 min-w-[20px]">{Math.round(musicScore)}</span>
                 </div>
 
-                {/* Audio Toggle (Bottom Right, inside container to keep unit cohesive, but accessible) */}
-                <div className="absolute bottom-2 right-3 z-30 flex gap-2">
+                {/* Audio Toggle (Bottom Left, inside container to keep unit cohesive, but accessible) */}
+                <div className="absolute bottom-2 left-3 z-30 flex gap-2">
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
