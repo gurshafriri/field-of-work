@@ -701,10 +701,24 @@ function App() {
       const targetHash = `#project/${slug}`;
       if (window.location.hash !== targetHash) {
         window.history.pushState(null, '', targetHash);
+        
+        // Track project view in Cloudflare Web Analytics
+        if (typeof window !== 'undefined' && (window as any).__cfBeacon) {
+          (window as any).__cfBeacon.trackEvent('pageview', { 
+            path: targetHash 
+          });
+        }
       }
     } else if (isAdminOpen) {
        if (window.location.hash !== '#admin') {
          window.history.pushState(null, '', '#admin');
+         
+         // Track admin view in Cloudflare Web Analytics
+         if (typeof window !== 'undefined' && (window as any).__cfBeacon) {
+           (window as any).__cfBeacon.trackEvent('pageview', { 
+             path: '#admin'
+           });
+         }
        }
     } else {
        // Clear hash if state is clean but URL isn't
