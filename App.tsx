@@ -45,6 +45,7 @@ function App() {
 
   // Audio Playback State
   const [playingProject, setPlayingProject] = useState<ProcessedProject | null>(null);
+  const [lastNavigatedProject, setLastNavigatedProject] = useState<ProcessedProject | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
@@ -404,7 +405,20 @@ function App() {
   };
 
   // Auto-advance Playlist Logic
-  const handleAudioEnded = useCallback(() => {
+  const scrollToProject = useCallback((project: ProcessedProject) => {
+      if (!scrollContainerRef.current) return;
+      const scaledX = project.x * zoom;
+      const scaledY = project.y * zoom;
+
+      scrollContainerRef.current.scrollTo({
+          left: scaledX - (window.innerWidth / 2),
+          top: scaledY - (window.innerHeight / 2),
+          behavior: 'smooth'
+      });
+  }, [zoom]);
+
+  // Specific handler for Auto-Advance (End of Track)
+  const handleAutoAdvance = useCallback(() => {
       if (!playingProject) return;
 
       // Add current to history
@@ -438,36 +452,81 @@ function App() {
 
       let nextProject: ProcessedProject | undefined;
 
-      // LOGIC:
-      // 1. If we haven't played Featured yet (and we aren't playing it now), Play Featured.
+      // LOGIC (same as before)
       if (featuredProject && !playlistHistory.current.has(featuredProject.id) && playingProject.id !== featuredProject.id) {
            nextProject = featuredProject;
-      } 
-      // 2. If we just finished Featured, or Featured is already in history:
-      //    Continue down the "Others" list.
-      else {
-          // Find the first track in 'others' that hasn't been played yet
-          // This handles the case where we started with 'others[0]', went to 'Featured', and need to go to 'others[1]'
+      } else {
           nextProject = others.find(p => !playlistHistory.current.has(p.id));
-          
-          // If all others played, play Alpha (if not played)
           if (!nextProject && alphaProject && !playlistHistory.current.has(alphaProject.id)) {
               nextProject = alphaProject;
           }
       }
 
       if (nextProject) {
-          console.log("Auto-advancing to:", nextProject.title);
           setPlayingProject(nextProject);
+          setLastNavigatedProject(nextProject); // Sync navigation
           setIsAudioPlaying(true);
           handleMuteRequest();
+          scrollToProject(nextProject);
       } else {
           console.log("Playlist finished");
           setIsAudioPlaying(false);
           setAudioProgress(0);
-          playlistHistory.current.clear(); // Reset for next time
+          playlistHistory.current.clear();
       }
-  }, [playingProject, processedProjects, handleMuteRequest]);
+  }, [playingProject, processedProjects, handleMuteRequest, scrollToProject]);
+
+  const handlePlayNext = useCallback(() => {
+    // If audio is playing, use the auto-advance logic (next track with audio)
+    if (isAudioPlaying && playingProject) {
+        handleAutoAdvance();
+        return;
+    }
+
+    // Otherwise (not playing), just navigate focus without playing
+    // Determine the current reference project for navigation
+    // 1. lastNavigatedProject if available (manual navigation)
+    // 2. playingProject if available (currently playing but paused)
+    // 3. Inhibition/Exhibition I as default fallback if nothing else
+    
+    const allProjectsByDate = [...processedProjects].sort((a, b) => {
+        const parseDate = (dateStr?: string) => {
+            if (!dateStr) return 0;
+            const [month, year] = dateStr.split('/').map(Number);
+            const fullYear = year < 100 ? 2000 + year : year;
+            return new Date(fullYear, month - 1).getTime();
+        };
+        return parseDate(b.date) - parseDate(a.date);
+    });
+
+    const currentRef = lastNavigatedProject || playingProject;
+    
+    let nextProject: ProcessedProject | undefined;
+    
+    if (currentRef) {
+        const currentIndex = allProjectsByDate.findIndex(p => p.id === currentRef.id);
+        const nextIndex = (currentIndex + 1) % allProjectsByDate.length;
+        nextProject = allProjectsByDate[nextIndex];
+    } else {
+        // Start from first project (newest)
+        nextProject = allProjectsByDate[0];
+    }
+
+    if (nextProject) {
+        console.log("Navigating to:", nextProject.title);
+        
+        // Update visual focus
+        setLastNavigatedProject(nextProject);
+        scrollToProject(nextProject);
+        
+        // IMPORTANT: DO NOT PLAY AUDIO
+        // Just move focus.
+    }
+  }, [processedProjects, lastNavigatedProject, playingProject, scrollToProject, isAudioPlaying, handleAutoAdvance]);
+
+  const handleAudioEnded = useCallback(() => {
+      handleAutoAdvance();
+  }, [handleAutoAdvance]);
 
   const handleTogglePlay = (shouldPlay: boolean) => {
       setIsAudioPlaying(shouldPlay);
@@ -959,36 +1018,93 @@ function App() {
                             </button>
 
                             {/* Playing Badge (Mini) */}
-                            {playingProject && (
-                                <div 
-                                    onClick={() => setSelectedProject(playingProject)}
-                                    className="relative w-8 h-8 shrink-0 cursor-pointer group rounded-md overflow-hidden border border-white/20 hover:border-blue-400 transition-colors"
-                                    title={`Playing: ${playingProject.title}`}
-                                >
-                                    {/* Background Image */}
-                                    {playingProject.imageUrl ? (
-                                        <img 
-                                            src={mediaPath(playingProject.imageUrl)} 
-                                            alt={playingProject.title}
-                                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-neutral-800" />
-                                    )}
-                                    
-                                    {/* Animation Overlay */}
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                                        {isAudioPlaying ? (
-                                            <div className="flex gap-0.5 items-center">
-                                                <div className="w-0.5 h-2 bg-white animate-[bounce_1s_infinite]" />
-                                                <div className="w-0.5 h-3 bg-white animate-[bounce_1.2s_infinite]" />
-                                                <div className="w-0.5 h-2 bg-white animate-[bounce_0.8s_infinite]" />
-                                            </div>
+                            {/* Playing Badge (Mini) */}
+                            {playingProject ? (
+                                <>
+                                    <div 
+                                        onClick={() => setSelectedProject(playingProject)}
+                                        className="relative w-8 h-8 shrink-0 cursor-pointer group rounded-md overflow-hidden border border-white/20 hover:border-blue-400 transition-colors"
+                                        title={`Playing: ${playingProject.title}`}
+                                    >
+                                        {/* Background Image */}
+                                        {playingProject.imageUrl ? (
+                                            <img 
+                                                src={mediaPath(playingProject.imageUrl)} 
+                                                alt={playingProject.title}
+                                                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
+                                            />
                                         ) : (
-                                            <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
+                                            <div className="w-full h-full bg-neutral-800" />
                                         )}
+                                        
+                                        {/* Animation Overlay */}
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                            {isAudioPlaying ? (
+                                                <div className="flex gap-0.5 items-center">
+                                                    <div className="w-0.5 h-2 bg-white animate-[bounce_1s_infinite]" />
+                                                    <div className="w-0.5 h-3 bg-white animate-[bounce_1.2s_infinite]" />
+                                                    <div className="w-0.5 h-2 bg-white animate-[bounce_0.8s_infinite]" />
+                                                </div>
+                                            ) : (
+                                                <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+                                    {/* Next Button */}
+                                    <button 
+                                        onClick={handlePlayNext}
+                                        className="text-neutral-400 hover:text-white p-1.5 rounded hover:bg-white/10 transition-colors"
+                                        title="Next Project"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            const target = lastNavigatedProject || processedProjects.find(p => p.title === "Inhibition/Exhibition I");
+                                            
+                                            // Determine what to play
+                                            if (target) {
+                                                // If target has audio, play it
+                                                if (target.audioUrl) {
+                                                     setPlayingProject(target);
+                                                     setIsAudioPlaying(true);
+                                                     handleMuteRequest();
+                                                     scrollToProject(target);
+                                                } else {
+                                                    // Fallback to Inhibition if selected has no audio
+                                                    const fallback = processedProjects.find(p => p.title === "Inhibition/Exhibition I");
+                                                    if (fallback) {
+                                                        setPlayingProject(fallback);
+                                                        setIsAudioPlaying(true);
+                                                        handleMuteRequest();
+                                                        scrollToProject(fallback);
+                                                    }
+                                                }
+                                            }
+                                        }}
+                                        className="w-8 h-8 flex items-center justify-center rounded-md border border-white/20 hover:border-blue-400 hover:bg-white/10 text-white transition-colors"
+                                        title={lastNavigatedProject ? `Play ${lastNavigatedProject.title}` : "Start Listening"}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                            <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                    {/* Next Button (Initial State) */}
+                                    <button 
+                                        onClick={handlePlayNext}
+                                        className="text-neutral-400 hover:text-white p-1.5 rounded hover:bg-white/10 transition-colors"
+                                        title="Next Project"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>
